@@ -72,31 +72,36 @@
 }
 
 .book {
+  --back-face-rotation: rotateY(180deg);
+  --sheet-origin: left center;
+  --sheet-turned-transform: rotateY(-179.8deg);
+  --spread-x: 0;
+  --spread-y: 0;
   aspect-ratio: 4 / 5.3;
   max-height: min(64svh, 560px);
   max-width: min(88vw, 600px);
   perspective: 1800px;
   position: relative;
-  transform: translateX(0);
+  transform: translate3d(var(--spread-x), var(--spread-y), 0);
   transition: transform 520ms cubic-bezier(0.24, 0.84, 0.3, 1);
-  width: clamp(260px, 68vw, 600px);
+  width: clamp(260px, 44vw, 600px);
 }
 
 .bookSpread {
-  transform: translateX(clamp(72px, 17vw, 300px));
+  --spread-x: 50%;
 }
 
 .sheet {
   cursor: default;
   inset: 0;
   position: absolute;
-  transform-origin: left center;
+  transform-origin: var(--sheet-origin);
   transform-style: preserve-3d;
   transition: transform 700ms cubic-bezier(0.24, 0.84, 0.3, 1);
 }
 
 .sheetTurned {
-  transform: rotateY(-179.8deg);
+  transform: var(--sheet-turned-transform);
 }
 
 .face {
@@ -117,7 +122,7 @@
 
 .backFace {
   background: linear-gradient(180deg, var(--paper) 0%, #ffefe3 100%);
-  transform: rotateY(180deg);
+  transform: var(--back-face-rotation);
 }
 
 .coverLayout {
@@ -201,6 +206,7 @@
   border: 0;
   bottom: 0;
   cursor: pointer;
+  height: 100%;
   position: absolute;
   top: 0;
   width: 50%;
@@ -225,6 +231,52 @@
   right: 0;
 }
 
+@media (max-width: 900px) {
+  .scene {
+    overflow-y: auto;
+  }
+
+  .book {
+    --back-face-rotation: rotateX(180deg);
+    --sheet-origin: top center;
+    --sheet-turned-transform: rotateX(179.8deg);
+    max-height: none;
+    width: min(86vw, 430px);
+  }
+
+  .bookSpread {
+    --spread-x: 0;
+    --spread-y: 50%;
+  }
+
+  .leftHitZone,
+  .rightHitZone {
+    width: 100%;
+  }
+
+  .leftHitZone {
+    bottom: auto;
+    height: 50%;
+    left: 0;
+    top: 0;
+  }
+
+  .leftHitZoneSpread {
+    height: 100%;
+    left: 0;
+    top: -100%;
+    width: 100%;
+  }
+
+  .rightHitZone {
+    bottom: auto;
+    height: 100%;
+    left: 0;
+    right: auto;
+    top: 0;
+  }
+}
+
 @media (max-width: 560px) {
   .cardArea {
     justify-content: flex-start;
@@ -232,11 +284,6 @@
   }
 
   .book {
-    max-height: none;
     width: min(84vw, 340px);
-  }
-
-  .bookSpread {
-    transform: translateX(clamp(20px, 8vw, 84px));
   }
 }

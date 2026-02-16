@@ -259,7 +259,7 @@ export function ValentineBook() {
                         alt={`Left page image ${index + 1}`}
                         className={styles.leftPageImage}
                         fill
-                        sizes="(max-width: 560px) 42vw, 300px"
+                        sizes="(max-width: 900px) 86vw, 300px"
                         src={page.leftPage.imageSrc}
                         style={{
                           objectFit: page.leftPage.fit ?? "cover",
