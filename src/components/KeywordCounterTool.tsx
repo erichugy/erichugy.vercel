@@ -60,12 +60,15 @@ export default function KeywordCounterTool() {
         cache: "no-store",
       });
 
+      const data = (await response.json().catch(() => null)) as JobResponse | null;
+
       if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error(body?.error || "Failed to fetch tool status.");
+        throw new Error(data?.error || "Failed to fetch tool status.");
       }
 
-      const data = (await response.json()) as JobResponse;
+      if (!data) {
+        throw new Error("Received an empty response while polling job status.");
+      }
       setJob(data);
 
       if (data.status === "completed" || data.status === "failed") {
@@ -135,7 +138,13 @@ export default function KeywordCounterTool() {
 
       setJobId(body.jobId);
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "Unexpected error.");
+      if (submitError instanceof TypeError) {
+        setError("Network error. Please check your connection and try again.");
+      } else if (submitError instanceof Error) {
+        setError(submitError.message);
+      } else {
+        setError("An unexpected error occurred while starting the job.");
+      }
     } finally {
       setIsSubmitting(false);
     }

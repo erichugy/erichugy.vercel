@@ -72,6 +72,14 @@ const CARD_PAGES: CardPage[] = [
 
 const CUSTOM_SUBTITLE = "The most amazing and beautiful angel of a person in the world.";
 
+const FALLBACK_COVER_SVG = "/vday/valentine-cover-cutout.svg";
+/** Pixels from each edge used to sample the dominant background color. */
+const EDGE_SAMPLE_RADIUS = 18;
+/** Max Euclidean RGB distance to be considered part of the backdrop. */
+const BACKDROP_COLOR_THRESHOLD = 75;
+/** Extra distance range over which alpha fades smoothly to avoid harsh edges. */
+const BACKDROP_SOFT_EDGE = 28;
+
 function removeBlueBackdrop(image: HTMLImageElement): string {
   const canvas = document.createElement("canvas");
   canvas.width = image.naturalWidth;
@@ -79,14 +87,13 @@ function removeBlueBackdrop(image: HTMLImageElement): string {
 
   const context = canvas.getContext("2d");
   if (!context) {
-    return "/vday/valentine-cover-cutout.svg";
+    return FALLBACK_COVER_SVG;
   }
 
   context.drawImage(image, 0, 0);
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
   const pixels = imageData.data;
 
-  const sampleRadius = 18;
   let redTotal = 0;
   let greenTotal = 0;
   let blueTotal = 0;
@@ -102,10 +109,10 @@ function removeBlueBackdrop(image: HTMLImageElement): string {
 
   for (let y = 0; y < canvas.height; y += 1) {
     for (let x = 0; x < canvas.width; x += 1) {
-      const nearLeft = x < sampleRadius;
-      const nearRight = x >= canvas.width - sampleRadius;
-      const nearTop = y < sampleRadius;
-      const nearBottom = y >= canvas.height - sampleRadius;
+      const nearLeft = x < EDGE_SAMPLE_RADIUS;
+      const nearRight = x >= canvas.width - EDGE_SAMPLE_RADIUS;
+      const nearTop = y < EDGE_SAMPLE_RADIUS;
+      const nearBottom = y >= canvas.height - EDGE_SAMPLE_RADIUS;
 
       if (nearLeft || nearRight || nearTop || nearBottom) {
         samplePixel(x, y);
@@ -116,9 +123,6 @@ function removeBlueBackdrop(image: HTMLImageElement): string {
   const averageRed = redTotal / sampleCount;
   const averageGreen = greenTotal / sampleCount;
   const averageBlue = blueTotal / sampleCount;
-
-  const threshold = 75;
-  const softEdge = 28;
 
   for (let index = 0; index < pixels.length; index += 4) {
     const red = pixels[index];
@@ -134,13 +138,13 @@ function removeBlueBackdrop(image: HTMLImageElement): string {
     const likelyBlueBackdrop =
       blue >= red + 20 && green >= red + 10 && blue >= 130;
 
-    if (distance < threshold && likelyBlueBackdrop) {
+    if (distance < BACKDROP_COLOR_THRESHOLD && likelyBlueBackdrop) {
       pixels[index + 3] = 0;
       continue;
     }
 
-    if (distance < threshold + softEdge && likelyBlueBackdrop) {
-      const blend = (distance - threshold) / softEdge;
+    if (distance < BACKDROP_COLOR_THRESHOLD + BACKDROP_SOFT_EDGE && likelyBlueBackdrop) {
+      const blend = (distance - BACKDROP_COLOR_THRESHOLD) / BACKDROP_SOFT_EDGE;
       pixels[index + 3] = Math.round(pixels[index + 3] * blend);
     }
   }
@@ -151,7 +155,7 @@ function removeBlueBackdrop(image: HTMLImageElement): string {
 
 export function ValentineBook() {
   const [turnedPages, setTurnedPages] = useState(0);
-  const [coverArtSource, setCoverArtSource] = useState("/vday/valentine-cover-cutout.svg");
+  const [coverArtSource, setCoverArtSource] = useState(FALLBACK_COVER_SVG);
   const maxTurns = CARD_PAGES.length - 1;
   const hasSpreadOpen = turnedPages > 0;
 
@@ -170,7 +174,7 @@ export function ValentineBook() {
       }
 
       if (index >= coverCandidates.length) {
-        setCoverArtSource("/vday/valentine-cover-cutout.svg");
+        setCoverArtSource(FALLBACK_COVER_SVG);
         return;
       }
 

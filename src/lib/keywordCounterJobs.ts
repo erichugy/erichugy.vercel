@@ -8,6 +8,12 @@ const PAGE_LIMIT = 700;
 const MAX_RETRIES = 8;
 const REQUEST_TIMEOUT_MS = 60_000;
 const PREVIEW_LIMIT = 200;
+/** Safety cap to prevent infinite pagination loops if the API never stops returning nextToken. */
+const MAX_PAGES = 10_000;
+/** Time-to-live for completed/failed jobs before automatic cleanup (24 hours). */
+const JOB_TTL_MS = 24 * 60 * 60 * 1_000;
+/** How often to check for expired jobs (60 seconds). */
+const JOB_CLEANUP_INTERVAL_MS = 60_000;
 
 export type KeywordCounterStatus = "running" | "completed" | "failed";
 
@@ -54,10 +60,25 @@ const outputRoot = path.join(process.cwd(), ".tmp", "keyword-counter");
 
 const globalState = globalThis as typeof globalThis & {
   __keywordCounterJobs?: Map<string, KeywordCounterJob>;
+  __keywordCounterCleanupTimer?: ReturnType<typeof setInterval>;
 };
 
 const jobs = globalState.__keywordCounterJobs ?? new Map<string, KeywordCounterJob>();
 globalState.__keywordCounterJobs = jobs;
+
+if (!globalState.__keywordCounterCleanupTimer) {
+  globalState.__keywordCounterCleanupTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [id, job] of jobs) {
+      const isFinished = job.status === "completed" || job.status === "failed";
+      const age = now - new Date(job.updatedAt).getTime();
+      if (isFinished && age > JOB_TTL_MS) {
+        jobs.delete(id);
+        fs.rm(job.outputDir, { recursive: true, force: true }).catch(() => {});
+      }
+    }
+  }, JOB_CLEANUP_INTERVAL_MS);
+}
 
 function nowIso() {
   return new Date().toISOString();
@@ -423,7 +444,7 @@ async function runJob(jobId: string, input: KeywordCounterInput) {
   let matchedMessages = 0;
   let nextToken: string | undefined;
 
-  while (true) {
+  while (pages < MAX_PAGES) {
     const data = await fetchMessagesPage({
       botId: input.botId,
       token: input.pat,

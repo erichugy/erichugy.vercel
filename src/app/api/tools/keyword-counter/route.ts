@@ -27,6 +27,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const MAX_FIELD_LENGTH = 5_000;
+  if (pat.length > MAX_FIELD_LENGTH || botId.length > MAX_FIELD_LENGTH || keywords.length > MAX_FIELD_LENGTH) {
+    return NextResponse.json(
+      { error: "One or more input fields exceed the maximum allowed length." },
+      { status: 400 },
+    );
+  }
+
   const job = createKeywordCounterJob({
     pat,
     botId,
