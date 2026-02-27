@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Project = {
@@ -86,7 +87,7 @@ const getCardPosition = (
   return "hidden";
 };
 
-export default function FeaturedProjects(): React.JSX.Element {
+export default function FeaturedProjects(): React.JSX.Element | null {
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
@@ -120,6 +121,7 @@ export default function FeaturedProjects(): React.JSX.Element {
   };
 
   const activeProject = PROJECTS[activeIndex];
+  if (!activeProject) return null;
 
   return (
     <section id="portfolio" className="px-6 py-16 md:py-24 bg-page">
@@ -201,18 +203,18 @@ export default function FeaturedProjects(): React.JSX.Element {
               </h3>
               <p className="text-body leading-relaxed">{activeProject.description}</p>
               <div className="mt-6 flex flex-wrap justify-center gap-3 md:justify-start">
-                <a
+                <Link
                   href={activeProject.primaryCtaHref}
                   className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-white px-5 py-2 rounded-lg transition-colors font-medium"
                 >
                   {activeProject.primaryCtaLabel}
-                </a>
-                <a
+                </Link>
+                <Link
                   href={activeProject.secondaryCtaHref}
                   className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-lg transition-colors font-medium hover:bg-card"
                 >
                   {activeProject.secondaryCtaLabel}
-                </a>
+                </Link>
               </div>
             </div>
           </div>
