@@ -24,7 +24,7 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 10);
 }
 
-export function addRequest(req: CapturedRequest): void {
+function addRequest(req: CapturedRequest): void {
   capturedRequests.unshift(req);
   if (capturedRequests.length > MAX_REQUESTS) {
     capturedRequests.pop();

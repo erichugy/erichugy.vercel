@@ -5,13 +5,18 @@ import { captureFromNextRequest } from "@/lib/requestBinStore";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+  "Access-Control-Allow-Headers": "*",
+};
+
 async function handle(request: NextRequest): Promise<NextResponse> {
   const captured = await captureFromNextRequest(request, "/requests/send");
-  return NextResponse.json({
-    message: "Request captured",
-    id: captured.id,
-    timestamp: captured.timestamp,
-  });
+  return NextResponse.json(
+    { message: "Request captured", id: captured.id, timestamp: captured.timestamp },
+    { headers: corsHeaders },
+  );
 }
 
 export async function GET(request: NextRequest) {

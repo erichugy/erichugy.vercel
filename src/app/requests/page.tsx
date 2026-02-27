@@ -2,15 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-type CapturedRequest = {
-  id: string;
-  timestamp: string;
-  method: string;
-  path: string;
-  query: Record<string, string>;
-  headers: Record<string, string>;
-  body: unknown;
-};
+import type { CapturedRequest } from "@/lib/requestBinStore";
 
 function escapeHtml(str: string): string {
   return str
@@ -180,6 +172,9 @@ export default function RequestBinPage() {
 
   const fetchRequests = useCallback(async () => {
     const res = await fetch("/api/requests");
+    if (!res.ok) {
+      return;
+    }
     const data: CapturedRequest[] = await res.json();
     setRequests(data);
   }, []);

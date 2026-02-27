@@ -7,6 +7,12 @@ export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ slug: string[] }> };
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS",
+  "Access-Control-Allow-Headers": "*",
+};
+
 async function handle(
   request: NextRequest,
   { params }: RouteParams,
@@ -14,11 +20,10 @@ async function handle(
   const { slug } = await params;
   const path = "/requests/send/" + slug.join("/");
   const captured = await captureFromNextRequest(request, path);
-  return NextResponse.json({
-    message: "Request captured",
-    id: captured.id,
-    timestamp: captured.timestamp,
-  });
+  return NextResponse.json(
+    { message: "Request captured", id: captured.id, timestamp: captured.timestamp },
+    { headers: corsHeaders },
+  );
 }
 
 export async function GET(request: NextRequest, ctx: RouteParams) {
