@@ -57,11 +57,11 @@ type CardPosition = "active" | "previous" | "next" | "hidden";
 
 const CARD_POSITION_CLASSNAME: Record<CardPosition, string> = {
   active:
-    "z-30 translate-x-0 scale-100 opacity-100 shadow-[0_24px_45px_rgba(0,0,0,0.34)]",
+    "z-30 translate-x-0 scale-100 opacity-100 shadow-[0_20px_40px_rgba(12,27,33,0.18)]",
   previous:
-    "z-20 -translate-x-[34%] scale-[0.9] opacity-90 shadow-[0_18px_35px_rgba(0,0,0,0.25)] max-[535px]:translate-x-0 max-[535px]:opacity-0 max-[535px]:pointer-events-none",
+    "z-20 -translate-x-[34%] scale-[0.9] opacity-90 shadow-[0_14px_30px_rgba(12,27,33,0.12)] max-[535px]:translate-x-0 max-[535px]:opacity-0 max-[535px]:pointer-events-none",
   next:
-    "z-20 translate-x-[34%] scale-[0.9] opacity-90 shadow-[0_18px_35px_rgba(0,0,0,0.25)] max-[535px]:translate-x-0 max-[535px]:opacity-0 max-[535px]:pointer-events-none",
+    "z-20 translate-x-[34%] scale-[0.9] opacity-90 shadow-[0_14px_30px_rgba(12,27,33,0.12)] max-[535px]:translate-x-0 max-[535px]:opacity-0 max-[535px]:pointer-events-none",
   hidden: "z-10 scale-[0.75] opacity-0 pointer-events-none",
 };
 
@@ -124,13 +124,16 @@ export default function FeaturedProjects(): React.JSX.Element | null {
   if (!activeProject) return null;
 
   return (
-    <section id="portfolio" className="px-6 py-16 md:py-24 bg-page">
+    <section id="portfolio" className="px-6 py-20 md:py-28 bg-page-alt">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10 md:mb-14">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading mb-4">
+          <p className="font-mono text-sm text-muted tracking-wide mb-3">
+            {"< projects />"}
+          </p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading mb-3">
             Featured Projects
           </h2>
-          <p className="text-lg text-body max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted max-w-2xl mx-auto">
             A few things I have built in a seamless rotating showcase.
           </p>
         </div>
@@ -154,7 +157,7 @@ export default function FeaturedProjects(): React.JSX.Element | null {
                   type="button"
                   onClick={() => setActiveIndex(index)}
                   aria-label={`Show ${project.title}`}
-                  className={`absolute left-0 right-0 top-1/2 mx-auto w-[min(80vw,20rem)] min-[536px]:w-[56%] max-w-[28rem] aspect-square -translate-y-1/2 overflow-hidden rounded-[1.75rem] border border-border transition-all duration-500 ease-out ${
+                  className={`absolute left-0 right-0 top-1/2 mx-auto w-[min(80vw,20rem)] min-[536px]:w-[56%] max-w-[28rem] aspect-square -translate-y-1/2 overflow-hidden rounded-[1.25rem] border border-border transition-all duration-500 ease-out ${
                     CARD_POSITION_CLASSNAME[position]
                   }`}
                 >
@@ -174,13 +177,13 @@ export default function FeaturedProjects(): React.JSX.Element | null {
             })}
           </div>
 
-          <div className="relative mt-8 rounded-2xl border border-border bg-card p-6 md:p-8 shadow-sm">
+          <div className="card-glow relative mt-8 rounded-xl border border-border bg-card p-5 md:p-7 shadow-[0_2px_8px_rgba(12,27,33,0.06)]">
             <div className="pointer-events-none absolute left-4 right-4 top-4 flex justify-between">
               <button
                 type="button"
                 aria-label="View previous project"
                 onClick={goToPreviousProject}
-                className="pointer-events-auto h-9 w-9 rounded-full border border-border bg-page text-heading text-xl leading-none transition-transform hover:scale-110"
+                className="pointer-events-auto h-8 w-8 rounded-full border border-border bg-page text-heading text-lg leading-none transition-all hover:scale-105 hover:shadow-sm"
               >
                 &#8249;
               </button>
@@ -188,30 +191,30 @@ export default function FeaturedProjects(): React.JSX.Element | null {
                 type="button"
                 aria-label="View next project"
                 onClick={goToNextProject}
-                className="pointer-events-auto h-9 w-9 rounded-full border border-border bg-page text-heading text-xl leading-none transition-transform hover:scale-110"
+                className="pointer-events-auto h-8 w-8 rounded-full border border-border bg-page text-heading text-lg leading-none transition-all hover:scale-105 hover:shadow-sm"
               >
                 &#8250;
               </button>
             </div>
 
-            <div className="pt-10">
-              <p className="text-xs md:text-sm uppercase tracking-[0.12em] text-muted mb-2">
+            <div className="pt-9">
+              <p className="text-xs font-mono uppercase tracking-[0.14em] text-muted mb-2 font-medium">
                 Project {activeIndex + 1} of {PROJECTS.length}
               </p>
-              <h3 className="text-2xl font-semibold text-heading mb-3">
+              <h3 className="text-xl md:text-2xl font-semibold text-heading mb-2">
                 {activeProject.title}
               </h3>
-              <p className="text-body leading-relaxed">{activeProject.description}</p>
-              <div className="mt-6 flex flex-wrap justify-center gap-3 md:justify-start">
+              <p className="text-body text-sm md:text-base leading-relaxed">{activeProject.description}</p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3 md:justify-start">
                 <Link
                   href={activeProject.primaryCtaHref}
-                  className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-white px-5 py-2 rounded-lg transition-colors font-medium"
+                  className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-accent-text px-5 py-2 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm"
                 >
                   {activeProject.primaryCtaLabel}
                 </Link>
                 <Link
                   href={activeProject.secondaryCtaHref}
-                  className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-lg transition-colors font-medium hover:bg-card"
+                  className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-[10px] transition-all font-medium text-sm hover:bg-card hover:shadow-sm"
                 >
                   {activeProject.secondaryCtaLabel}
                 </Link>
@@ -227,10 +230,10 @@ export default function FeaturedProjects(): React.JSX.Element | null {
               type="button"
               aria-label={`Go to ${project.title}`}
               onClick={() => setActiveIndex(index)}
-              className={`h-2.5 rounded-full transition-all ${
+              className={`h-2 rounded-full transition-all ${
                 index === activeIndex
-                  ? "w-7 bg-accent"
-                  : "w-2.5 bg-border hover:bg-muted"
+                  ? "w-6 bg-accent"
+                  : "w-2 bg-border hover:bg-muted"
               }`}
             />
           ))}
