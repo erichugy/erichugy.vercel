@@ -13,7 +13,7 @@ export default function Hero() {
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-heading leading-[1.08]">
               Hello, I&apos;m{" "}
-              <span className="text-accent drop-shadow-[0_0_20px_rgba(14,165,201,0.2)]">
+              <span className="text-accent drop-shadow-[0_0_20px_rgba(14,165,201,0.2)] dark:drop-shadow-[0_0_20px_rgba(34,211,238,0.35)]">
                 Eric Huang
               </span>
             </h1>

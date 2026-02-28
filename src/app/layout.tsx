@@ -12,10 +12,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
           (function() {
-            var theme = localStorage.getItem('theme');
-            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-              document.documentElement.classList.add('dark');
-            }
+            try {
+              var theme = null;
+              try { theme = localStorage.getItem('theme'); } catch(e) {}
+              var prefersDark = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+              if (theme === 'dark' || (!theme && prefersDark)) {
+                document.documentElement.classList.add('dark');
+              }
+            } catch(e) {}
           })();
         `,
           }}
