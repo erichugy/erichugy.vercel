@@ -7,12 +7,18 @@ export default function Hero() {
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Content */}
           <div className="space-y-5">
+            <p className="font-mono text-sm text-muted tracking-wide">
+              {"// welcome to my portfolio"}
+            </p>
+
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-heading leading-[1.08]">
               Hello, I&apos;m{" "}
-              <span className="text-accent">Eric Huang</span>
+              <span className="text-accent drop-shadow-[0_0_20px_rgba(240,180,74,0.15)]">
+                Eric Huang
+              </span>
             </h1>
 
-            <h2 className="text-lg md:text-xl text-muted font-medium tracking-wide uppercase">
+            <h2 className="text-lg md:text-xl text-muted font-medium font-mono tracking-wide uppercase">
               Full Stack Developer
             </h2>
 

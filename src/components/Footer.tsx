@@ -27,7 +27,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-muted hover:text-heading transition-colors text-sm"
+                    className="font-mono text-muted hover:text-heading transition-colors text-sm"
                   >
                     {link.label}
                   </Link>
@@ -47,7 +47,7 @@ export default function Footer() {
               >
                 {/* Placeholder for social icons - using text for now */}
                 <span className="text-lg font-semibold">
-                  {social.icon === "in" ? "in" : "𝕏"}
+                  {social.icon === "in" ? "in" : "\uD835\uDD4F"}
                 </span>
               </a>
             ))}
@@ -56,8 +56,8 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="text-center pt-5 border-t border-border/40">
-          <p className="text-muted text-xs">
-            © 2024 Eric Huang. All rights reserved.
+          <p className="font-mono text-muted text-xs">
+            &copy; 2024 Eric Huang. All rights reserved.
           </p>
         </div>
       </div>

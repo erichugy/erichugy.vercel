@@ -124,9 +124,12 @@ export default function FeaturedProjects(): React.JSX.Element | null {
   if (!activeProject) return null;
 
   return (
-    <section id="portfolio" className="px-6 py-20 md:py-28 bg-page">
+    <section id="portfolio" className="px-6 py-20 md:py-28 bg-page-alt">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10 md:mb-14">
+          <p className="font-mono text-sm text-muted tracking-wide mb-3">
+            {"< projects />"}
+          </p>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading mb-3">
             Featured Projects
           </h2>
@@ -174,7 +177,7 @@ export default function FeaturedProjects(): React.JSX.Element | null {
             })}
           </div>
 
-          <div className="relative mt-8 rounded-xl border border-border bg-card p-5 md:p-7 shadow-[0_2px_8px_rgba(44,34,24,0.06)]">
+          <div className="card-glow relative mt-8 rounded-xl border border-border bg-card p-5 md:p-7 shadow-[0_2px_8px_rgba(44,34,24,0.06)]">
             <div className="pointer-events-none absolute left-4 right-4 top-4 flex justify-between">
               <button
                 type="button"
@@ -195,7 +198,7 @@ export default function FeaturedProjects(): React.JSX.Element | null {
             </div>
 
             <div className="pt-9">
-              <p className="text-xs uppercase tracking-[0.14em] text-muted mb-2 font-medium">
+              <p className="text-xs font-mono uppercase tracking-[0.14em] text-muted mb-2 font-medium">
                 Project {activeIndex + 1} of {PROJECTS.length}
               </p>
               <h3 className="text-xl md:text-2xl font-semibold text-heading mb-2">

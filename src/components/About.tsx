@@ -5,6 +5,9 @@ export default function About() {
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-start">
           {/* Left Column - About Me */}
           <div className="space-y-5">
+            <p className="font-mono text-sm text-muted tracking-wide">
+              {">"} about_me
+            </p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading">
               About Me
             </h2>
@@ -22,25 +25,25 @@ export default function About() {
           </div>
 
           {/* Right Column - Skills Card */}
-          <div className="bg-card rounded-xl border border-border p-6 md:p-8 shadow-[0_2px_8px_rgba(44,34,24,0.06)]">
+          <div className="card-glow bg-card rounded-xl border border-border p-6 md:p-8 shadow-[0_2px_8px_rgba(44,34,24,0.06)]">
             <h2 className="text-2xl md:text-3xl font-bold text-heading mb-5">
               My Skills
             </h2>
             <ul className="space-y-3.5 mb-7">
               <li className="flex items-center gap-3 text-body text-base">
-                <span className="text-accent text-xl">🎨</span>
+                <span className="text-accent text-xl">&#127912;</span>
                 <span>Web Design</span>
               </li>
               <li className="flex items-center gap-3 text-body text-base">
-                <span className="text-accent text-xl">💻</span>
+                <span className="text-accent text-xl">&#128187;</span>
                 <span>Front-End Development</span>
               </li>
               <li className="flex items-center gap-3 text-body text-base">
-                <span className="text-accent text-xl">📱</span>
+                <span className="text-accent text-xl">&#128241;</span>
                 <span>Responsive Design</span>
               </li>
               <li className="flex items-center gap-3 text-body text-base">
-                <span className="text-accent text-xl">⚡</span>
+                <span className="text-accent text-xl">&#9889;</span>
                 <span>Performance Optimization</span>
               </li>
             </ul>

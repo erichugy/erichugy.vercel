@@ -2,6 +2,7 @@
 
 @theme {
   --color-page: #FAF8F5;
+  --color-page-alt: #F4F1ED;
   --color-card: #FFFFFF;
   --color-border: #E8E2DA;
   --color-accent: #E8A838;
@@ -9,6 +10,21 @@
   --color-heading: #2C2218;
   --color-body: #5C5248;
   --color-muted: #8C8478;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+/* Dark mode overrides */
+.dark {
+  --color-page: #0F0D0B;
+  --color-page-alt: #161412;
+  --color-card: #1C1916;
+  --color-border: #2E2924;
+  --color-accent: #F0B44A;
+  --color-accent-hover: #E5A63D;
+  --color-heading: #FAF6F1;
+  --color-body: #A69D93;
+  --color-muted: #756D64;
 }
 
 body {
@@ -21,8 +37,23 @@ html {
 }
 
 /* Tighten heading letter-spacing globally */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   letter-spacing: -0.02em;
+}
+
+/* Card warm glow on hover (dark mode only) */
+.card-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.dark .card-glow:hover {
+  box-shadow: 0 0 30px rgba(240, 180, 74, 0.08),
+    0 0 60px rgba(240, 180, 74, 0.04);
 }
 
 @keyframes keyword-progress-slide {
@@ -38,6 +69,10 @@ h1, h2, h3, h4, h5, h6 {
   width: 40%;
   height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #D4962E 0%, #E8A838 100%);
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-hover) 0%,
+    var(--color-accent) 100%
+  );
   animation: keyword-progress-slide 1.2s ease-in-out infinite;
 }

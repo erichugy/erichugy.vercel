@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { NAV_LINKS } from "@/lib/constants";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
   return (
@@ -23,7 +24,7 @@ export default function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
-                className="text-sm font-medium text-body transition-colors hover:text-heading lg:text-[0.938rem]"
+                className="text-sm font-medium font-mono text-body transition-colors hover:text-heading lg:text-[0.938rem]"
               >
                 {link.label}
               </Link>
@@ -31,12 +32,15 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <Link
-          href="/#contact"
-          className="justify-self-end rounded-[10px] bg-accent px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-accent-hover hover:shadow-md md:px-5 md:py-2 md:text-sm lg:px-6 lg:py-2.5"
-        >
-          Hire Me
-        </Link>
+        <div className="flex items-center gap-3 justify-self-end">
+          <ThemeToggle />
+          <Link
+            href="/#contact"
+            className="rounded-[10px] bg-accent px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-accent-hover hover:shadow-md md:px-5 md:py-2 md:text-sm lg:px-6 lg:py-2.5"
+          >
+            Hire Me
+          </Link>
+        </div>
       </nav>
     </header>
   );

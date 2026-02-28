@@ -1,7 +1,13 @@
 export default function ContactCTA() {
   return (
-    <section id="contact" className="px-6 py-20 md:py-28 bg-page">
-      <div className="max-w-3xl mx-auto text-center">
+    <section id="contact" className="px-6 py-20 md:py-28 bg-page-alt relative overflow-hidden">
+      {/* Blurred accent glow */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[28rem] h-[28rem] rounded-full bg-accent/[0.06] blur-[100px]" />
+
+      <div className="max-w-3xl mx-auto text-center relative">
+        <p className="font-mono text-sm text-muted tracking-wide mb-3">
+          {"// get in touch"}
+        </p>
         <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading mb-4">
           Let&apos;s Work Together
         </h2>
