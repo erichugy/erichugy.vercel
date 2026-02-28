@@ -13,8 +13,8 @@ export default function Navbar() {
             src="/logo.png"
             alt="Eric Huang logo"
             width={1024}
-            height={1536}
-            className="h-24 w-auto rounded-xl md:h-[8rem] lg:h-[9rem] object-contain"
+            height={1024}
+            className="size-24 rounded-xl md:size-[8rem] lg:size-[9rem]"
             priority
           />
         </Link>
