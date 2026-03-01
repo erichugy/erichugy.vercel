@@ -17,3 +17,7 @@ next-env.d.ts
 .cursor
 CLAUDE.md
 WARP.md
+
+# Go
+bin/
+*.exe
