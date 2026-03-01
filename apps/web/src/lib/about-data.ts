@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// -- Types ------------------------------------------------------------------
+// ── Types ──────────────────────────────────────────────────────────────────
 
->>>>>>> 8e5f050 (multi-agent(about-volunteer): Add volunteer work section component)
 export interface WorkExperience {
   company: string;
   position: string;
@@ -13,8 +9,6 @@ export interface WorkExperience {
   highlights: string[];
 }
 
-<<<<<<< HEAD
-=======
 export interface VolunteerWork {
   organization: string;
   role: string;
@@ -28,20 +22,15 @@ export interface Activity {
   icon: string;
 }
 
-// -- Data -------------------------------------------------------------------
+// ── Data ───────────────────────────────────────────────────────────────────
 
->>>>>>> 8e5f050 (multi-agent(about-volunteer): Add volunteer work section component)
 export const WORK_EXPERIENCES: WorkExperience[] = [
   {
     company: "Acme Corp",
     position: "Full Stack Developer",
     duration: "Jan 2024 - Present",
     description:
-<<<<<<< HEAD
-      "Building and maintaining customer-facing web applications with a focus on performance and accessibility.",
-=======
       "Building and maintaining customer-facing web applications serving thousands of daily users.",
->>>>>>> 8e5f050 (multi-agent(about-volunteer): Add volunteer work section component)
     techStack: ["React", "Next.js", "TypeScript", "PostgreSQL", "Tailwind CSS"],
     highlights: [
       "Led migration from legacy CRA app to Next.js, improving LCP by 40%",
@@ -50,34 +39,6 @@ export const WORK_EXPERIENCES: WorkExperience[] = [
     ],
   },
   {
-<<<<<<< HEAD
-    company: "StartupXYZ",
-    position: "Frontend Engineer",
-    duration: "Jun 2022 - Dec 2023",
-    description:
-      "Developed the core product UI for an early-stage SaaS platform serving thousands of users.",
-    techStack: ["React", "TypeScript", "GraphQL", "Styled Components"],
-    highlights: [
-      "Built a drag-and-drop dashboard builder from scratch",
-      "Reduced bundle size by 35% through code splitting and lazy loading",
-      "Introduced end-to-end testing with Playwright, achieving 90% coverage",
-    ],
-  },
-  {
-    company: "Freelance",
-    position: "Web Developer",
-    duration: "Jan 2021 - May 2022",
-    description:
-      "Delivered custom websites and web applications for small businesses and local clients.",
-    techStack: ["HTML", "CSS", "JavaScript", "WordPress", "Node.js"],
-    highlights: [
-      "Completed 15+ client projects on time and within budget",
-      "Built a custom e-commerce solution that increased client revenue by 25%",
-      "Maintained long-term relationships with repeat clients",
-    ],
-  },
-];
-=======
     company: "Startup Labs",
     position: "Frontend Engineer",
     duration: "Jun 2023 - Dec 2023",
@@ -128,60 +89,29 @@ export const VOLUNTEER_WORK: VolunteerWork[] = [
   },
 ];
 
-=======
-export interface Activity {
-  title: string;
-  description: string;
-  icon: string; // emoji
-}
-
->>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
 export const ACTIVITIES: Activity[] = [
   {
     title: "Open Source",
     description:
-<<<<<<< HEAD
       "Active contributor to several open-source projects, focusing on developer tooling and UI libraries.",
-    icon: "\u{1F4E6}",
-=======
-      "Active contributor to several open-source projects, focusing on developer tools and web frameworks.",
     icon: "📦",
->>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
   },
   {
     title: "Tech Writing",
     description:
-<<<<<<< HEAD
       "Occasionally publish blog posts about web performance, TypeScript patterns, and developer experience.",
-    icon: "\u{270D}\u{FE0F}",
-=======
-      "Occasionally publish blog posts about web performance, architecture patterns, and lessons learned.",
     icon: "✍️",
->>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
   },
   {
     title: "Rock Climbing",
     description:
-<<<<<<< HEAD
       "Bouldering enthusiast who enjoys the problem-solving nature of climbing routes.",
-    icon: "\u{1F9D7}",
-=======
-      "Bouldering enthusiast who enjoys the problem-solving nature of figuring out routes.",
     icon: "🧗",
->>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
   },
   {
     title: "Photography",
     description:
-<<<<<<< HEAD
       "Landscape and street photography hobbyist, always looking for interesting compositions.",
-    icon: "\u{1F4F7}",
-  },
-];
->>>>>>> 8e5f050 (multi-agent(about-volunteer): Add volunteer work section component)
-=======
-      "Landscape and street photography hobbyist, always looking for interesting light and compositions.",
     icon: "📷",
   },
 ];
->>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
