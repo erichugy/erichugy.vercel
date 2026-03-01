@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function About() {
   return (
-    <section id="about" className="px-6 py-20 md:py-28 bg-page">
+    <section id="about" className="px-6 py-20 md:py-28 bg-page-alt">
       <div className="max-w-3xl mx-auto">
         <p className="font-mono text-sm text-muted tracking-wide mb-3">
           {">"} about_me

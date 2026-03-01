@@ -124,7 +124,7 @@ export default function FeaturedProjects(): React.JSX.Element | null {
   if (!activeProject) return null;
 
   return (
-    <section id="portfolio" className="px-6 py-20 md:py-28 bg-page-alt">
+    <section id="portfolio" className="px-6 py-20 md:py-28 bg-page">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-10 md:mb-14">
           <p className="font-mono text-sm text-muted tracking-wide mb-3">
