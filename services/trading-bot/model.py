@@ -16,15 +16,12 @@ def sentiment(input_texts: List[str]):
 
     co = cohere.Client(COHERE_API_KEY)
 
-    n = 0
-    m = 0
-    recommendation_score = 0
+    recommendation_score = 0.0
+    batch_size = 95
 
-    while n < len(input_texts):
-        m += min(95, len(input_texts) - n)
-        batch = input_texts[n:m]
-        if len(batch) == 0:
-            n += m
+    for i in range(0, len(input_texts), batch_size):
+        batch = input_texts[i : i + batch_size]
+        if not batch:
             continue
 
         try:
@@ -41,7 +38,5 @@ def sentiment(input_texts: List[str]):
                 recommendation_score += classification.confidence / k
             elif classification.prediction == "negative":
                 recommendation_score -= classification.confidence / k
-
-        n += m
 
     return recommendation_score

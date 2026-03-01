@@ -3,6 +3,7 @@ import re
 from flask import Flask, jsonify, request
 
 from analysis import analyze_text_list
+from config import COHERE_API_KEY
 from market_news import get_articles, get_page_text
 from article import Article
 from typing import List
@@ -31,7 +32,12 @@ def analyse_news(article_objs: List[Article], fast: bool = False):
             title, text_lines = get_page_text(article.url)
             text_lines.append(title)
 
-        score = analyze_text_list(text_lines)
+        # Use Cohere ML model if API key is available, otherwise fall back to word-based
+        if COHERE_API_KEY:
+            from model import sentiment
+            score = sentiment(text_lines)
+        else:
+            score = analyze_text_list(text_lines)
         total_score += score
 
         if score > 0.05:

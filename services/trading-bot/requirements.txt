@@ -1,5 +1,5 @@
-flask
-cohere
-requests
-beautifulsoup4
-gunicorn
+flask>=3.0,<4.0
+cohere>=5.0,<6.0
+requests>=2.31,<3.0
+beautifulsoup4>=4.12,<5.0
+gunicorn>=22.0,<23.0
