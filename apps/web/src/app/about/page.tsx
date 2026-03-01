@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import VolunteerWork from "@/components/VolunteerWork";
 import WorkExperience from "@/components/WorkExperience";
 
 export const metadata = {
@@ -69,7 +70,8 @@ export default function AboutPage() {
         {/* Work Experience Timeline */}
         <WorkExperience />
 
-        {/* Volunteer Work — Worker 2 */}
+        {/* Volunteer Work */}
+        <VolunteerWork />
 
         {/* Activities — Worker 3 */}
       </main>
