@@ -1,3 +1,4 @@
+import Activities from "@/components/Activities";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import VolunteerWork from "@/components/VolunteerWork";
@@ -73,7 +74,8 @@ export default function AboutPage() {
         {/* Volunteer Work */}
         <VolunteerWork />
 
-        {/* Activities — Worker 3 */}
+        {/* Activities & Interests */}
+        <Activities />
       </main>
       <Footer />
     </>

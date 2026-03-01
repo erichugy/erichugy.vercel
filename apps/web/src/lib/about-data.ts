@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 // -- Types ------------------------------------------------------------------
 
@@ -127,30 +128,60 @@ export const VOLUNTEER_WORK: VolunteerWork[] = [
   },
 ];
 
+=======
+export interface Activity {
+  title: string;
+  description: string;
+  icon: string; // emoji
+}
+
+>>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
 export const ACTIVITIES: Activity[] = [
   {
     title: "Open Source",
     description:
+<<<<<<< HEAD
       "Active contributor to several open-source projects, focusing on developer tooling and UI libraries.",
     icon: "\u{1F4E6}",
+=======
+      "Active contributor to several open-source projects, focusing on developer tools and web frameworks.",
+    icon: "📦",
+>>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
   },
   {
     title: "Tech Writing",
     description:
+<<<<<<< HEAD
       "Occasionally publish blog posts about web performance, TypeScript patterns, and developer experience.",
     icon: "\u{270D}\u{FE0F}",
+=======
+      "Occasionally publish blog posts about web performance, architecture patterns, and lessons learned.",
+    icon: "✍️",
+>>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
   },
   {
     title: "Rock Climbing",
     description:
+<<<<<<< HEAD
       "Bouldering enthusiast who enjoys the problem-solving nature of climbing routes.",
     icon: "\u{1F9D7}",
+=======
+      "Bouldering enthusiast who enjoys the problem-solving nature of figuring out routes.",
+    icon: "🧗",
+>>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
   },
   {
     title: "Photography",
     description:
+<<<<<<< HEAD
       "Landscape and street photography hobbyist, always looking for interesting compositions.",
     icon: "\u{1F4F7}",
   },
 ];
 >>>>>>> 8e5f050 (multi-agent(about-volunteer): Add volunteer work section component)
+=======
+      "Landscape and street photography hobbyist, always looking for interesting light and compositions.",
+    icon: "📷",
+  },
+];
+>>>>>>> 1162deb (multi-agent(about-activities): Add activities and interests section component)
