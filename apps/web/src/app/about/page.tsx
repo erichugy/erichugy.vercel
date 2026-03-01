@@ -28,15 +28,15 @@ export default function AboutPage() {
                   About Me
                 </h1>
                 <p className="text-base md:text-lg text-body leading-relaxed">
-                  I&apos;m a passionate full stack developer with experience
-                  creating custom websites and applications. I specialize in
-                  responsive design, front-end development, and building sites
-                  that are both beautiful and functional.
+                  Software engineer with experience in applied AI and enterprise
+                  full-stack development. Currently building integrations and
+                  developer tooling at Botpress, previously automating enterprise
+                  workflows at LIDD Consultants.
                 </p>
                 <p className="text-base md:text-lg text-body leading-relaxed">
-                  With a strong foundation in computer science and a keen eye for
-                  detail, I bring ideas to life through clean code and thoughtful
-                  user experiences.
+                  McGill CS graduate with a minor in Management (3.85 GPA).
+                  I enjoy building tools that make developers more productive
+                  and systems that scale.
                 </p>
               </div>
 
@@ -47,20 +47,20 @@ export default function AboutPage() {
                 </h2>
                 <ul className="space-y-3.5">
                   <li className="flex items-center gap-3 text-body text-base">
-                    <span className="text-accent text-xl">&#127912;</span>
-                    <span>Web Design</span>
+                    <span className="text-accent text-xl">💻</span>
+                    <span>Full Stack Development</span>
                   </li>
                   <li className="flex items-center gap-3 text-body text-base">
-                    <span className="text-accent text-xl">&#128187;</span>
-                    <span>Front-End Development</span>
+                    <span className="text-accent text-xl">🤖</span>
+                    <span>AI & Machine Learning</span>
                   </li>
                   <li className="flex items-center gap-3 text-body text-base">
-                    <span className="text-accent text-xl">&#128241;</span>
-                    <span>Responsive Design</span>
+                    <span className="text-accent text-xl">🔗</span>
+                    <span>API & ERP Integrations</span>
                   </li>
                   <li className="flex items-center gap-3 text-body text-base">
-                    <span className="text-accent text-xl">&#9889;</span>
-                    <span>Performance Optimization</span>
+                    <span className="text-accent text-xl">⚡</span>
+                    <span>Developer Tooling</span>
                   </li>
                 </ul>
               </div>

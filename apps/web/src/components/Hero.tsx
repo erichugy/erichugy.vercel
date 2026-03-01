@@ -19,13 +19,13 @@ export default function Hero() {
             </h1>
 
             <h2 className="text-lg md:text-xl text-muted font-medium font-mono tracking-wide uppercase">
-              Full Stack Developer
+              Software Engineer
             </h2>
 
             <p className="text-base md:text-lg text-body leading-relaxed max-w-lg">
-              I&apos;m a full stack developer with a passion for building efficient,
-              user-friendly websites and applications. Let&apos;s work together to
-              bring your vision to life.
+              Software engineer building AI integrations and enterprise tools.
+              Currently at Botpress, McGill CS graduate. I build things that
+              make developers more productive.
             </p>
 
             <div className="pt-2">

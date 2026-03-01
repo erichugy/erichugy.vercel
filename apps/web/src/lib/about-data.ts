@@ -14,6 +14,7 @@ export interface VolunteerWork {
   role: string;
   duration: string;
   description: string;
+  techStack?: string[];
 }
 
 export interface Activity {
@@ -26,81 +27,90 @@ export interface Activity {
 
 export const WORK_EXPERIENCES: WorkExperience[] = [
   {
-    company: "Acme Corp",
-    position: "Full Stack Developer",
-    duration: "Jan 2024 - Present",
+    company: "Botpress",
+    position: "Software Developer Intern",
+    duration: "Jan 2026 - Present",
     description:
-      "Building and maintaining customer-facing web applications serving thousands of daily users.",
-    techStack: ["React", "Next.js", "TypeScript", "PostgreSQL", "Tailwind CSS"],
+      "Building integrations and developer tooling for the Botpress conversational AI platform.",
+    techStack: ["TypeScript", "Node.js", "Bun", "Zod", "Slack API"],
     highlights: [
-      "Led migration from legacy CRA app to Next.js, improving LCP by 40%",
-      "Designed and implemented a real-time notification system",
-      "Mentored two junior developers through onboarding",
+      "Built an Odoo ERP integration, creating REST endpoints and exposing ERP entities as dynamic bot knowledge; supported $200K+ in enterprise pipeline",
+      "Extended the Slack integration with cross-channel routing and state correlation, enabling multi-legged conversations with in-thread response reconciliation",
+      "Built an ADK-based Slack bot that auto-logs ~10 integration requests/week, improving traceability and cutting support-channel noise",
+      "Hardened the public Botpress ADK CLI (~400 weekly downloads) and refined agent-skill files for Claude Code/LLM workflows",
     ],
   },
   {
-    company: "Startup Labs",
-    position: "Frontend Engineer",
-    duration: "Jun 2023 - Dec 2023",
+    company: "LIDD Consultants",
+    position: "Software Developer",
+    duration: "May 2023 - Dec 2025",
     description:
-      "Developed the frontend for an early-stage SaaS product from zero to launch.",
-    techStack: ["React", "TypeScript", "Zustand", "Tailwind CSS", "Vite"],
+      "Built custom ERP solutions and automated enterprise workflows for supply chain and logistics clients.",
+    techStack: ["JavaScript", "HTML/CSS", "NetSuite", "REST APIs", "SQL"],
     highlights: [
-      "Shipped MVP in 8 weeks, onboarding 200+ beta users",
-      "Built a reusable component library shared across three products",
-      "Implemented end-to-end tests with Playwright, reaching 90% coverage",
+      "Automated 20+ accounting and order-to-cash workflows via custom NetSuite pages and Map/Reduce pipelines, processing 100 orders/min",
+      "Integrated NetSuite with WMS/TMS platforms via REST APIs and data contracts, doubling fulfillment throughput",
+      "Refactored inefficient JOIN operations and implemented query caching, reducing lookup latency by 65% (~800ms)",
+      "Cut reporting time by 50% through automated custom NetSuite web pages",
     ],
   },
   {
-    company: "University IT Services",
-    position: "Web Developer Intern",
-    duration: "Sep 2022 - May 2023",
+    company: "McGill University",
+    position: "Researcher",
+    duration: "Sep 2024 - Dec 2024",
     description:
-      "Maintained and improved internal tools used by faculty and students.",
-    techStack: ["Python", "Django", "JavaScript", "HTML/CSS", "MySQL"],
+      "Researched distributed deep reinforcement learning for path-finding in dynamic environments.",
+    techStack: ["Python", "PyTorch", "RLlib", "IMPALA", "A3C"],
     highlights: [
-      "Rebuilt the course catalog search, reducing page load time by 60%",
-      "Automated weekly report generation, saving 5 hours per week",
+      "Architected a distributed path-finding system using IMPALA and RLlib; proposed a hybrid A*/RL framework for global navigation with local collision avoidance",
+      "Developed a 'Revolving Mini-Batch' training strategy that eliminated catastrophic forgetting and enabled generalization across distinct obstacle layouts",
+    ],
+  },
+  {
+    company: "Pratt & Whitney Canada",
+    position: "Data Science Intern",
+    duration: "Sep 2022 - Dec 2022",
+    description:
+      "Automated data pipelines and built interactive dashboards for aerospace manufacturing analytics.",
+    techStack: ["Python", "Pandas", "Power BI", "SQL", "Regex"],
+    highlights: [
+      "Launched a pipeline to automate large dataset extraction, cleaning, and parsing, reducing data errors by 20% and cutting processing time by 75%",
+      "Built an interactive KPI dashboard with Python and Power BI, automating nearly 50% of monthly financial operations",
     ],
   },
 ];
 
 export const VOLUNTEER_WORK: VolunteerWork[] = [
   {
-    organization: "Code for Community",
-    role: "Lead Developer",
-    duration: "Mar 2024 - Present",
+    organization: "Hack4Impact McGill — Welcome Collective",
+    role: "Full Stack Developer",
+    duration: "Sep 2024 - May 2025",
     description:
-      "Volunteering as lead developer on a pro-bono web app that connects local food banks with surplus donors.",
+      "Engineered a logistics routing engine using A* to optimize donation pick-up/delivery schedules, enabling managers to coordinate routes for 100+ daily clients. Designed a PostgreSQL schema to manage real-time inventory and client data, improving item allocation accuracy by 40%.",
+    techStack: ["TypeScript", "React", "Node.js", "Express", "Docker", "PostgreSQL"],
   },
   {
-    organization: "Hack4Good",
-    role: "Mentor & Judge",
-    duration: "Oct 2023 - Present",
+    organization: "123Loadboard — CodeJams Hackathon",
+    role: "Developer",
+    duration: "Oct 2023",
     description:
-      "Mentoring student teams during weekend hackathons focused on social impact projects.",
-  },
-  {
-    organization: "Open Source Initiative",
-    role: "Contributor",
-    duration: "Jan 2023 - Aug 2023",
-    description:
-      "Contributed bug fixes and documentation improvements to popular open-source UI component libraries.",
+      "Designed a recommendation algorithm for truck drivers to optimize deliveries and maximize profit. Developed predictive models using Random Forest Regression to estimate upcoming deliveries.",
+    techStack: ["Flutter", "Python", "MQTT", "Scikit-Learn", "Docker", "FastAPI"],
   },
 ];
 
 export const ACTIVITIES: Activity[] = [
   {
-    title: "Open Source",
+    title: "Open Source & Dev Tooling",
     description:
-      "Active contributor to several open-source projects, focusing on developer tooling and UI libraries.",
+      "Contributing to the Botpress ADK CLI and building developer tools for AI agent workflows.",
     icon: "📦",
   },
   {
-    title: "Tech Writing",
+    title: "AI & Machine Learning",
     description:
-      "Occasionally publish blog posts about web performance, TypeScript patterns, and developer experience.",
-    icon: "✍️",
+      "Exploring reinforcement learning, distributed training, and applied AI for real-world problems.",
+    icon: "🤖",
   },
   {
     title: "Rock Climbing",
