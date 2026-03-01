@@ -11,8 +11,8 @@ export default function Page() {
       <Navbar />
       <main>
         <Hero />
-        <FeaturedProjects />
         <About />
+        <FeaturedProjects />
         <ContactCTA />
       </main>
       <Footer />

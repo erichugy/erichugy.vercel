@@ -23,6 +23,7 @@ export default function About() {
         </p>
         <Link
           href="/about"
+          scroll={true}
           className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-text px-6 py-2.5 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm"
         >
           Learn More &rarr;
