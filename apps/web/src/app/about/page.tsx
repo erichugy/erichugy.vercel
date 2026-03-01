@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import WorkExperience from "@/components/WorkExperience";
 
 export const metadata = {
   title: "About Me | Eric Huang",
@@ -65,7 +66,8 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Work Experience Timeline — Worker 1 */}
+        {/* Work Experience Timeline */}
+        <WorkExperience />
 
         {/* Volunteer Work — Worker 2 */}
 
