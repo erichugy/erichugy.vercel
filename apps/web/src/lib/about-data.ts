@@ -1,6 +1,6 @@
 // ── Feature Flags ──────────────────────────────────────────────────────────
 
-/** Toggle to show/hide dates across all timeline components */
+/** Toggle to show/hide dates in the education timeline (work experience dates are always visible) */
 export const SHOW_DATES = false;
 
 // ── Types ──────────────────────────────────────────────────────────────────

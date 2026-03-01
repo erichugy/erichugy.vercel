@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { SHOW_DATES, WORK_EXPERIENCES } from "@/lib/about-data";
+import { type WorkExperience as WorkExp, WORK_EXPERIENCES } from "@/lib/about-data";
 
 function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
@@ -24,6 +24,99 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
   );
 }
 
+function TimelineDot({ isExpanded, bg }: { isExpanded: boolean; bg: string }) {
+  return (
+    <div
+      className={`relative flex-shrink-0 w-[24px] h-[24px] rounded-full border-[2px] transition-colors duration-300 ${
+        isExpanded ? "border-accent bg-accent" : `border-accent ${bg}`
+      }`}
+    >
+      {isExpanded && (
+        <div className={`absolute inset-[4px] rounded-full ${bg}`} />
+      )}
+    </div>
+  );
+}
+
+function WorkCard({
+  exp,
+  isExpanded,
+  onToggle,
+}: {
+  exp: WorkExp;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className={`card-glow bg-card rounded-xl border border-border transition-all duration-300 ${
+        isExpanded ? "shadow-sm" : ""
+      }`}
+    >
+      {/* Header — always visible */}
+      <button
+        onClick={onToggle}
+        className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 cursor-pointer"
+        aria-expanded={isExpanded}
+      >
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold text-heading truncate">
+            {exp.company}
+          </h3>
+          <p className="text-sm text-muted">{exp.position}</p>
+        </div>
+        <span className="text-muted flex-shrink-0">
+          <ChevronIcon expanded={isExpanded} />
+        </span>
+      </button>
+
+      {/* Expandable content */}
+      <div
+        className="grid transition-[grid-template-rows] duration-300 ease-in-out"
+        style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr" }}
+      >
+        <div className="overflow-hidden">
+          <div className="px-5 pb-5">
+            <div className="border-t border-border pt-4 space-y-4">
+              {/* Description */}
+              <p className="text-body text-sm leading-relaxed">
+                {exp.description}
+              </p>
+
+              {/* Highlights */}
+              <ul className="space-y-2">
+                {exp.highlights.map((highlight, hIndex) => (
+                  <li
+                    key={hIndex}
+                    className="flex items-start gap-2 text-sm text-body"
+                  >
+                    <span className="text-accent mt-1 flex-shrink-0">
+                      &bull;
+                    </span>
+                    <span>{highlight}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Tech stack tags */}
+              <div className="flex flex-wrap gap-2 pt-1">
+                {exp.techStack.map((tech) => (
+                  <span
+                    key={tech}
+                    className="bg-page text-muted text-xs px-2 py-1 rounded-md font-mono"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function WorkExperience() {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
@@ -43,107 +136,49 @@ export default function WorkExperience() {
 
         {/* Timeline */}
         <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-[11px] md:left-[11px] top-2 bottom-2 w-[2px] bg-border" />
+          {/* Continuous vertical line (desktop only) */}
+          <div className="hidden md:block absolute left-[120px] ml-[27px] top-[30px] bottom-[30px] w-[2px] bg-border" />
 
           <div className="space-y-6">
             {WORK_EXPERIENCES.map((exp, index) => {
               const isExpanded = expandedIndex === index;
 
               return (
-                <div key={index} className="relative pl-10">
-                  {/* Timeline dot */}
-                  <div
-                    className={`absolute left-0 top-[18px] w-[24px] h-[24px] rounded-full border-[2px] transition-colors duration-300 ${
-                      isExpanded
-                        ? "border-accent bg-accent"
-                        : "border-accent bg-page-alt"
-                    }`}
-                  >
-                    {isExpanded && (
-                      <div className="absolute inset-[4px] rounded-full bg-page-alt" />
-                    )}
+                <div key={index}>
+                  {/* Mobile layout: date + dot row, then card */}
+                  <div className="md:hidden">
+                    <div className="mb-2 flex items-center gap-3">
+                      <TimelineDot isExpanded={isExpanded} bg="bg-page-alt" />
+                      <span className="font-mono text-xs text-muted">
+                        {exp.duration}
+                      </span>
+                    </div>
+                    <WorkCard
+                      exp={exp}
+                      isExpanded={isExpanded}
+                      onToggle={() => toggle(index)}
+                    />
                   </div>
 
-                  {/* Card */}
-                  <div
-                    className={`card-glow bg-card rounded-xl border border-border transition-all duration-300 ${
-                      isExpanded ? "shadow-sm" : ""
-                    }`}
-                  >
-                    {/* Header - always visible, clickable */}
-                    <button
-                      onClick={() => toggle(index)}
-                      className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 cursor-pointer"
-                      aria-expanded={isExpanded}
-                    >
-                      <div className="min-w-0">
-                        <h3 className="text-lg font-semibold text-heading truncate">
-                          {exp.company}
-                        </h3>
-                        <p className="text-sm text-muted">
-                          {exp.position}
-                          {SHOW_DATES && (
-                            <span className="font-mono text-xs">
-                              {" "}&middot; {exp.duration}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      <span className="text-muted flex-shrink-0">
-                        <ChevronIcon expanded={isExpanded} />
-                      </span>
-                    </button>
-
-                    {/* Expandable content */}
-                    <div
-                      className="grid transition-[grid-template-rows] duration-300 ease-in-out"
-                      style={{
-                        gridTemplateRows: isExpanded ? "1fr" : "0fr",
-                      }}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="px-5 pb-5">
-                          <div className="border-t border-border pt-4 space-y-4">
-                            {/* Description */}
-                            <p className="text-body text-sm leading-relaxed">
-                              {exp.description}
-                            </p>
-
-                            {/* Highlights */}
-                            <ul className="space-y-2">
-                              {exp.highlights.map((highlight, hIndex) => (
-                                <li
-                                  key={hIndex}
-                                  className="flex items-start gap-2 text-sm text-body"
-                                >
-                                  <span className="text-accent mt-1 flex-shrink-0">
-                                    &bull;
-                                  </span>
-                                  <span>{highlight}</span>
-                                </li>
-                              ))}
-                            </ul>
-
-                            {/* Tech stack tags */}
-                            <div className="flex flex-wrap gap-2 pt-1">
-                              {exp.techStack.map((tech) => (
-                                <span
-                                  key={tech}
-                                  className="bg-page text-muted text-xs px-2 py-1 rounded-md font-mono"
-                                >
-                                  {tech}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+                  {/* Desktop layout: date | dot+line | card */}
+                  <div className="hidden md:grid md:grid-cols-[120px_24px_1fr] md:gap-x-4">
+                    <div className="font-mono text-xs text-muted pt-[18px] text-right leading-snug">
+                      {exp.duration}
+                    </div>
+                    <div className="relative flex flex-col items-center z-10">
+                      <div className="mt-[18px]">
+                        <TimelineDot isExpanded={isExpanded} bg="bg-page-alt" />
                       </div>
                     </div>
+                    <WorkCard
+                      exp={exp}
+                      isExpanded={isExpanded}
+                      onToggle={() => toggle(index)}
+                    />
                   </div>
                 </div>
               );
-            })}
+          })}
           </div>
         </div>
       </div>
