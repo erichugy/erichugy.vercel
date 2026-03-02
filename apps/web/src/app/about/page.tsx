@@ -2,6 +2,7 @@ import Activities from "@/components/Activities";
 import EducationTimeline from "@/components/EducationTimeline";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
+import SkillsBubbleCanvas from "@/components/SkillsBubbleCanvas";
 import TechSkills from "@/components/TechSkills";
 import WorkExperience from "@/components/WorkExperience";
 import { CERTIFICATIONS, LANGUAGES, SHOW_DATES } from "@/lib/about-data";
@@ -63,16 +64,19 @@ export default function AboutPage() {
 
         {/* Technical Skills */}
         <section className="px-6 py-20 md:py-28 bg-page-alt">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <p className="font-mono text-sm text-muted tracking-wide mb-3">
               {"// skills"}
             </p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading mb-10">
               Skills
             </h2>
-
-            <TechSkills />
-
+            <div className="hidden md:block">
+              <SkillsBubbleCanvas />
+            </div>
+            <div className="md:hidden">
+              <TechSkills />
+            </div>
           </div>
         </section>
 
