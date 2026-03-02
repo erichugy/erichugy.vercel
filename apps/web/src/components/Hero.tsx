@@ -28,10 +28,20 @@ export default function Hero() {
               make developers more productive.
             </p>
 
-            <div className="pt-2">
-              <button className="bg-accent hover:bg-accent-hover text-accent-text px-6 py-2.5 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm">
-                View My Work
-              </button>
+            <div className="flex gap-3 flex-wrap pt-2">
+              <a
+                href="/Eric_Huang_Software-can.pdf"
+                download
+                className="bg-accent hover:bg-accent-hover text-accent-text px-6 py-2.5 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm"
+              >
+                Download Resume
+              </a>
+              <a
+                href="/#contact"
+                className="border border-accent text-accent hover:bg-accent/10 px-6 py-2.5 rounded-[10px] transition-all font-semibold text-sm"
+              >
+                Get in Touch
+              </a>
             </div>
           </div>
 
