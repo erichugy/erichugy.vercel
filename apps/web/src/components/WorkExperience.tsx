@@ -78,22 +78,17 @@ function WorkCard({
         <div className="overflow-hidden">
           <div className="px-5 pb-5">
             <div className="border-t border-border pt-4 space-y-4">
-              {/* Description */}
-              <p className="text-body text-sm leading-relaxed">
-                {exp.description}
-              </p>
-
               {/* Highlights */}
               <ul className="space-y-2">
-                {exp.highlights.map((highlight, hIndex) => (
+                {[exp.description, ...exp.highlights].map((text, i) => (
                   <li
-                    key={hIndex}
+                    key={i}
                     className="flex items-start gap-2 text-sm text-body"
                   >
                     <span className="text-accent mt-1 flex-shrink-0">
                       &bull;
                     </span>
-                    <span>{highlight}</span>
+                    <span>{text}</span>
                   </li>
                 ))}
               </ul>

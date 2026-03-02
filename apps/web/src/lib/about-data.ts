@@ -62,10 +62,10 @@ export const WORK_EXPERIENCES: WorkExperience[] = [
       "Building integrations and developer tooling for the Botpress conversational AI platform.",
     techStack: ["TypeScript", "Node.js", "Bun", "Zod", "Slack API"],
     highlights: [
-      "Built an Odoo ERP integration, creating REST endpoints and exposing ERP entities as dynamic bot knowledge; supported $200K+ in enterprise pipeline",
-      "Extended the Slack integration with cross-channel routing and state correlation, enabling multi-legged conversations with in-thread response reconciliation",
-      "Built an ADK-based Slack bot that auto-logs ~10 integration requests/week, improving traceability and cutting support-channel noise",
-      "Hardened the public Botpress ADK CLI (~400 weekly downloads) and refined agent-skill files for Claude Code/LLM workflows",
+      "Built an Odoo ERP integration, creating REST endpoints and exposing ERP entities as dynamic bot knowledge; supported $200K+ in enterprise pipeline.",
+      "Extended the Slack integration with cross-channel routing and state correlation, enabling multi-legged conversations with in-thread response reconciliation.",
+      "Built an ADK-based Slack bot that auto-logs ~10 integration requests/week, improving traceability and cutting support-channel noise.",
+      "Hardened the public Botpress ADK CLI (~400 weekly downloads) and refined agent-skill files for Claude Code/LLM workflows.",
     ],
   },
   {
@@ -76,10 +76,10 @@ export const WORK_EXPERIENCES: WorkExperience[] = [
       "Built custom ERP solutions and automated enterprise workflows for supply chain and logistics clients.",
     techStack: ["JavaScript", "HTML/CSS", "NetSuite", "REST APIs", "SQL"],
     highlights: [
-      "Automated 20+ accounting and order-to-cash workflows via custom NetSuite pages and Map/Reduce pipelines, processing 100 orders/min",
-      "Integrated NetSuite with WMS/TMS platforms via REST APIs and data contracts, doubling fulfillment throughput",
-      "Refactored inefficient JOIN operations and implemented query caching, reducing lookup latency by 65% (~800ms)",
-      "Cut reporting time by 50% through automated custom NetSuite web pages",
+      "Automated 20+ accounting and order-to-cash workflows via custom NetSuite pages and Map/Reduce pipelines, processing 100 orders/min.",
+      "Integrated NetSuite with WMS/TMS platforms via REST APIs and data contracts, doubling fulfillment throughput.",
+      "Refactored inefficient JOIN operations and implemented query caching, reducing lookup latency by 65% (~800ms).",
+      "Cut reporting time by 50% through automated custom NetSuite web pages.",
     ],
   },
   {
@@ -90,8 +90,8 @@ export const WORK_EXPERIENCES: WorkExperience[] = [
       "Researched distributed deep reinforcement learning for path-finding in dynamic environments.",
     techStack: ["Python", "PyTorch", "RLlib", "IMPALA", "A3C"],
     highlights: [
-      "Architected a distributed path-finding system using IMPALA and RLlib; proposed a hybrid A*/RL framework for global navigation with local collision avoidance",
-      "Developed a 'Revolving Mini-Batch' training strategy that eliminated catastrophic forgetting and enabled generalization across distinct obstacle layouts",
+      "Architected a distributed path-finding system using IMPALA and RLlib; proposed a hybrid A*/RL framework for global navigation with local collision avoidance.",
+      "Developed a 'Revolving Mini-Batch' training strategy that eliminated catastrophic forgetting and enabled generalization across distinct obstacle layouts.",
     ],
   },
   {
@@ -102,8 +102,8 @@ export const WORK_EXPERIENCES: WorkExperience[] = [
       "Automated data pipelines and built interactive dashboards for aerospace manufacturing analytics.",
     techStack: ["Python", "Pandas", "Power BI", "SQL", "Regex"],
     highlights: [
-      "Launched a pipeline to automate large dataset extraction, cleaning, and parsing, reducing data errors by 20% and cutting processing time by 75%",
-      "Built an interactive KPI dashboard with Python and Power BI, automating nearly 50% of monthly financial operations",
+      "Launched a pipeline to automate large dataset extraction, cleaning, and parsing, reducing data errors by 20% and cutting processing time by 75%.",
+      "Built an interactive KPI dashboard with Python and Power BI, automating nearly 50% of monthly financial operations.",
     ],
   },
 ];
