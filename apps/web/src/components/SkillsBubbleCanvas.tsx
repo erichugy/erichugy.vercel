@@ -61,6 +61,35 @@ const SKILL_ICONS: Record<string, IconType> = {
   PostgreSQL: SiPostgresql,
 };
 
+const SKILL_COLORS: Record<string, string> = {
+  TypeScript: "#3178C6",
+  JavaScript: "#F7DF1E",
+  Python: "#3776AB",
+  Bash: "#4EAA25",
+  "HTML/CSS": "#E34F26",
+  "Node.js": "#5FA04E",
+  Bun: "#FBF0DF",
+  Zod: "#3E67B1",
+  Express: "#000000",
+  FastAPI: "#009688",
+  Flask: "#000000",
+  React: "#61DAFB",
+  "Next.js": "#000000",
+  "Tailwind CSS": "#06B6D4",
+  Pandas: "#150458",
+  Matplotlib: "#11557C",
+  "Scikit-Learn": "#F7931E",
+  PyTorch: "#EE4C2C",
+  Docker: "#2496ED",
+  "Azure DevOps": "#0078D7",
+  Git: "#F05032",
+  GitHub: "#181717",
+  GitLab: "#FC6D26",
+  Jira: "#0052CC",
+  "Unix/Linux": "#FCC624",
+  PostgreSQL: "#4169E1",
+};
+
 const CATEGORY_LABELS: Record<string, string> = {
   languages: "Languages",
   backend: "Backend",
@@ -416,6 +445,7 @@ export default function SkillsBubbleCanvas() {
             <div className="flex flex-wrap justify-center gap-1.5 px-2">
               {cat.skills.map((skill) => {
                 const Icon = SKILL_ICONS[skill];
+                const color = SKILL_COLORS[skill];
                 return (
                   <div
                     key={skill}
@@ -423,11 +453,11 @@ export default function SkillsBubbleCanvas() {
                                px-1.5 py-0.5 card-glow shadow-[0_2px_8px_rgba(12,27,33,0.06)]"
                   >
                     <span
-                      className="text-body flex items-center justify-center"
+                      className="flex items-center justify-center"
                       aria-hidden="true"
                     >
                       {Icon ? (
-                        <Icon size={16} />
+                        <Icon size={16} color={color} />
                       ) : (
                         <span className="text-[10px] font-mono font-bold">
                           {skill[0]}
