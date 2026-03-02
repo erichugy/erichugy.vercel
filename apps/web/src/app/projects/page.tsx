@@ -6,6 +6,13 @@ import Navbar from "@/components/Navbar";
 
 const PROJECTS = [
   {
+    name: "Stock Sentiment Analyzer",
+    summary:
+      "Analyzes recent news articles using NLP to determine market sentiment and generate trading recommendations for any publicly traded stock.",
+    stack: ["Python", "Flask", "Cohere", "Alpaca API"],
+    href: "/projects/trading-bot",
+  },
+  {
     name: "Portfolio Platform",
     summary:
       "A custom Next.js portfolio with reusable sections, responsive layouts, and content managed in TypeScript data objects.",

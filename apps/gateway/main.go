@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,7 +26,7 @@ func main() {
 	// Build the HTTP mux with service routes and health endpoint.
 	mux := BuildMux(routes)
 
-	// Apply middleware chain: rate limiting -> CORS -> logging (outermost).
+	// Apply middleware chain (outermost first): logging -> CORS -> rate limiting.
 	handler := Chain(mux,
 		LoggingMiddleware,
 		CORSMiddleware,
@@ -83,7 +84,7 @@ func HealthHandler(routes []ServiceRoute) http.HandlerFunc {
 				Name: route.Prefix,
 				URL:  route.TargetURL.String(),
 			}
-			healthURL := fmt.Sprintf("%s/health", route.TargetURL.String())
+			healthURL, _ := url.JoinPath(route.TargetURL.String(), "health")
 			resp, err := client.Get(healthURL)
 			if err != nil {
 				sh.Healthy = false

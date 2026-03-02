@@ -45,7 +45,8 @@ func RegisterRoutes() []ServiceRoute {
 }
 
 // NewServiceProxy creates a reverse proxy for the given target URL.
-// It strips the service prefix from the request path before forwarding.
+// It strips the service prefix from the request path before forwarding,
+// and joins with the target's base path if present.
 func NewServiceProxy(prefix string, target *url.URL) http.Handler {
 	proxy := &httputil.ReverseProxy{
 		Director: func(req *http.Request) {
@@ -55,16 +56,38 @@ func NewServiceProxy(prefix string, target *url.URL) http.Handler {
 
 			// Strip the service prefix so the backend sees a clean path.
 			// e.g. /api/services/trading-bot/analyze -> /analyze
-			originalPath := req.URL.Path
-			req.URL.Path = strings.TrimPrefix(originalPath, strings.TrimSuffix(prefix, "/"))
-			if req.URL.Path == "" {
-				req.URL.Path = "/"
+			stripped := strings.TrimPrefix(req.URL.Path, strings.TrimSuffix(prefix, "/"))
+			if stripped == "" {
+				stripped = "/"
 			}
 
-			req.URL.RawQuery = targetURL.RawQuery
+			// Join with target's base path if present.
+			req.URL.Path = singleJoiningSlash(target.Path, stripped)
+
+			// Preserve query strings from both the target URL and the incoming request.
+			targetQuery := target.RawQuery
+			if targetQuery == "" || req.URL.RawQuery == "" {
+				if targetQuery != "" {
+					req.URL.RawQuery = targetQuery
+				}
+			} else {
+				req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
+			}
 		},
 	}
 	return proxy
+}
+
+func singleJoiningSlash(a, b string) string {
+	aslash := strings.HasSuffix(a, "/")
+	bslash := strings.HasPrefix(b, "/")
+	if aslash && bslash {
+		return a + b[1:]
+	}
+	if !aslash && !bslash {
+		return a + "/" + b
+	}
+	return a + b
 }
 
 // BuildMux constructs the HTTP mux with all registered service routes and the

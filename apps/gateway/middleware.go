@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -69,7 +71,7 @@ func (sr *statusRecorder) Flush() {
 }
 
 // Hijack implements http.Hijacker so WebSocket upgrades work through the proxy.
-func (sr *statusRecorder) Hijack() (interface{}, interface{}, error) {
+func (sr *statusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	if hj, ok := sr.ResponseWriter.(http.Hijacker); ok {
 		return hj.Hijack()
 	}
@@ -155,7 +157,9 @@ func RateLimitMiddleware(next http.Handler) http.Handler {
 		mu.Unlock()
 
 		if !allowed {
-			http.Error(w, `{"error":"rate limit exceeded"}`, http.StatusTooManyRequests)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte(`{"error":"rate limit exceeded"}`))
 			return
 		}
 
@@ -163,22 +167,26 @@ func RateLimitMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// clientIP extracts the client IP from the request, checking X-Forwarded-For
-// first, then falling back to RemoteAddr.
+// trustProxy is set at init from TRUST_PROXY env var. When true, X-Forwarded-For
+// is honored for client IP extraction; otherwise only RemoteAddr is used.
+var trustProxy = os.Getenv("TRUST_PROXY") == "true"
+
+// clientIP extracts the client IP from the request. X-Forwarded-For is only
+// trusted when running behind a known proxy (TRUST_PROXY=true).
 func clientIP(r *http.Request) string {
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// Take the first IP in the chain.
-		if idx := strings.Index(xff, ","); idx != -1 {
-			return strings.TrimSpace(xff[:idx])
+	if trustProxy {
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			if idx := strings.Index(xff, ","); idx != -1 {
+				return strings.TrimSpace(xff[:idx])
+			}
+			return strings.TrimSpace(xff)
 		}
-		return strings.TrimSpace(xff)
 	}
-	// RemoteAddr is "ip:port"; strip port.
-	addr := r.RemoteAddr
-	if idx := strings.LastIndex(addr, ":"); idx != -1 {
-		return addr[:idx]
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
 	}
-	return addr
+	return host
 }
 
 // Chain applies middleware in order (outermost first).

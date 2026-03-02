@@ -1,0 +1,42 @@
+# Local dev orchestration for the portfolio backend.
+# Frontend runs separately via: pnpm dev --filter web
+# Then visit http://localhost:3000 (frontend calls gateway at http://localhost:8080)
+
+name: curr-website
+
+services:
+  gateway:
+    build: ./apps/gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - TRADING_BOT_URL=http://trading-bot:5000
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3010
+    depends_on:
+      trading-bot:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend
+
+  trading-bot:
+    build: ./services/trading-bot
+    environment:
+      - ALPACA_API_KEY=${ALPACA_API_KEY}
+      - ALPACA_API_SECRET=${ALPACA_API_SECRET}
+      - COHERE_API_KEY=${COHERE_API_KEY}
+    expose:
+      - "5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
