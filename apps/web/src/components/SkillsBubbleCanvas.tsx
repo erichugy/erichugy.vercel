@@ -82,8 +82,8 @@ const RESTITUTION = 0.7;
 const DAMPING = 0.9985;
 const INITIAL_SPEED_MIN = 0.5;
 const INITIAL_SPEED_MAX = 1.5;
-const BASE_RADIUS = 80;
-const PER_SKILL_RADIUS = 18;
+const BASE_RADIUS = 60;
+const PER_SKILL_RADIUS = 12;
 
 const categories = Object.entries(TECHNICAL_SKILLS).map(([key, skills]) => ({
   key,
@@ -244,10 +244,17 @@ export default function SkillsBubbleCanvas() {
           const dist = Math.sqrt(dx * dx + dy * dy);
           const minDist = a.radius + bub.radius;
 
-          if (dist < minDist && dist > 0) {
-            // Collision normal
-            const nx = dx / dist;
-            const ny = dy / dist;
+          if (dist < minDist) {
+            // Collision normal (random direction if exactly overlapping)
+            let nx: number, ny: number;
+            if (dist === 0) {
+              const angle = Math.random() * Math.PI * 2;
+              nx = Math.cos(angle);
+              ny = Math.sin(angle);
+            } else {
+              nx = dx / dist;
+              ny = dy / dist;
+            }
 
             // Relative velocity along normal
             const dvx = a.vx - bub.vx;
@@ -275,11 +282,41 @@ export default function SkillsBubbleCanvas() {
         }
       }
 
-      // 5. Update DOM
+      // 5. Extra separation pass to resolve chain overlaps
+      for (let iter = 0; iter < 2; iter++) {
+        for (let i = 0; i < bubbles.length; i++) {
+          for (let j = i + 1; j < bubbles.length; j++) {
+            const a = bubbles[i];
+            const bub = bubbles[j];
+            const dx = bub.x - a.x;
+            const dy = bub.y - a.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const minDist = a.radius + bub.radius;
+            if (dist < minDist && dist > 0) {
+              const nx = dx / dist;
+              const ny = dy / dist;
+              const overlap = minDist - dist;
+              const totalMass = a.mass + bub.mass;
+              a.x -= (overlap * (bub.mass / totalMass)) * nx;
+              a.y -= (overlap * (bub.mass / totalMass)) * ny;
+              bub.x += (overlap * (a.mass / totalMass)) * nx;
+              bub.y += (overlap * (a.mass / totalMass)) * ny;
+            }
+          }
+        }
+      }
+
+      // 6. Update DOM
       for (let i = 0; i < bubbles.length; i++) {
         const el = bubbleRefs.current[i];
         if (el) {
           const b = bubbles[i];
+          if (!isFinite(b.x) || !isFinite(b.y)) {
+            b.x = w / 2;
+            b.y = h / 2;
+            b.vx = 0;
+            b.vy = 0;
+          }
           el.style.transform = `translate(${b.x - b.radius}px, ${b.y - b.radius}px)`;
         }
       }
@@ -298,6 +335,13 @@ export default function SkillsBubbleCanvas() {
       const oldH = sizeRef.current.h;
 
       if (newW === oldW && newH === oldH) return;
+      if (newW === 0 || newH === 0) return;
+
+      // If coming from zero size (e.g., display:none -> visible), reinitialize
+      if (oldW === 0 || oldH === 0) {
+        initPhysics();
+        return;
+      }
 
       sizeRef.current = { w: newW, h: newH };
       const scale = Math.min(Math.max(newW / 900, 0.6), 1.2);
@@ -330,6 +374,7 @@ export default function SkillsBubbleCanvas() {
         }
       }
 
+      setDiameters(bubbles.map((b) => b.radius * 2));
     });
 
     observer.observe(container);
@@ -346,7 +391,7 @@ export default function SkillsBubbleCanvas() {
       role="img"
       aria-label="Technical skills: TypeScript, JavaScript, Python, React, Next.js, Docker, and more"
       className="relative w-full overflow-hidden rounded-2xl"
-      style={{ height: "clamp(400px, 50vw, 600px)" }}
+      style={{ height: "clamp(500px, 50vw, 700px)" }}
     >
       {categories.map((cat, i) => {
         const diameter = diameters[i] ?? 0;
@@ -374,22 +419,22 @@ export default function SkillsBubbleCanvas() {
                 return (
                   <div
                     key={skill}
-                    className="flex items-center gap-1 bg-card rounded-lg border border-border
-                               px-2 py-1 card-glow shadow-[0_2px_8px_rgba(12,27,33,0.06)]"
+                    className="flex items-center gap-0.5 bg-card rounded-md border border-border
+                               px-1.5 py-0.5 card-glow shadow-[0_2px_8px_rgba(12,27,33,0.06)]"
                   >
                     <span
                       className="text-body flex items-center justify-center"
                       aria-hidden="true"
                     >
                       {Icon ? (
-                        <Icon size={14} />
+                        <Icon size={12} />
                       ) : (
                         <span className="text-[10px] font-mono font-bold">
                           {skill[0]}
                         </span>
                       )}
                     </span>
-                    <span className="text-[10px] font-mono text-body whitespace-nowrap">
+                    <span className="text-[9px] font-mono text-body whitespace-nowrap">
                       {skill}
                     </span>
                   </div>
