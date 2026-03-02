@@ -83,7 +83,7 @@ const DAMPING = 0.9985;
 const INITIAL_SPEED_MIN = 0.5;
 const INITIAL_SPEED_MAX = 1.5;
 const BASE_RADIUS = 60;
-const PER_SKILL_RADIUS = 12;
+const PER_SKILL_RADIUS = 15;
 
 const categories = Object.entries(TECHNICAL_SKILLS).map(([key, skills]) => ({
   key,
@@ -391,7 +391,7 @@ export default function SkillsBubbleCanvas() {
       role="img"
       aria-label="Technical skills: TypeScript, JavaScript, Python, React, Next.js, Docker, and more"
       className="relative w-full overflow-hidden rounded-2xl"
-      style={{ height: "clamp(500px, 50vw, 700px)" }}
+      style={{ height: "clamp(550px, 55vw, 750px)" }}
     >
       {categories.map((cat, i) => {
         const diameter = diameters[i] ?? 0;
@@ -427,14 +427,14 @@ export default function SkillsBubbleCanvas() {
                       aria-hidden="true"
                     >
                       {Icon ? (
-                        <Icon size={12} />
+                        <Icon size={16} />
                       ) : (
                         <span className="text-[10px] font-mono font-bold">
                           {skill[0]}
                         </span>
                       )}
                     </span>
-                    <span className="text-[9px] font-mono text-body whitespace-nowrap">
+                    <span className="text-xs font-mono text-body whitespace-nowrap">
                       {skill}
                     </span>
                   </div>
