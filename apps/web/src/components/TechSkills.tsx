@@ -224,7 +224,7 @@ export default function TechSkills() {
           key={skill}
           className="bg-card rounded-xl border border-border p-4 flex flex-col items-center gap-2 text-center card-glow shadow-[0_2px_8px_rgba(12,27,33,0.06)]"
         >
-          <span className="text-body w-8 h-8 flex items-center justify-center">
+          <span className="text-body w-8 h-8 flex items-center justify-center" aria-hidden="true">
             {SKILL_ICONS[skill] ?? (
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                 <rect x="4" y="4" width="24" height="24" rx="4" stroke="currentColor" strokeWidth="1.5" />

@@ -1,9 +1,9 @@
 import Activities from "@/components/Activities";
+import EducationTimeline from "@/components/EducationTimeline";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import EducationTimeline from "@/components/EducationTimeline";
-import WorkExperience from "@/components/WorkExperience";
 import TechSkills from "@/components/TechSkills";
+import WorkExperience from "@/components/WorkExperience";
 import { CERTIFICATIONS, LANGUAGES, SHOW_DATES } from "@/lib/about-data";
 
 export const metadata = {
