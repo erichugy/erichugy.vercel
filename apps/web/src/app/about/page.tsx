@@ -6,7 +6,7 @@ import SkillsBubbleCanvas from "@/components/SkillsBubbleCanvas";
 import TechSkills from "@/components/TechSkills";
 import WorkExperience from "@/components/WorkExperience";
 import { CERTIFICATIONS, LANGUAGES } from "@/lib/about-data";
-import { SHOW_DATES } from "@/lib/feature-flags";
+import { SHOW_ACTIVITIES, SHOW_DATES } from "@/lib/feature-flags";
 
 export const metadata = {
   title: "About Me | Eric Huang",
@@ -115,7 +115,7 @@ export default function AboutPage() {
         </section>
 
         {/* Activities & Interests */}
-        <Activities />
+        {SHOW_ACTIVITIES && <Activities />}
       </main>
       <Footer />
     </>
