@@ -32,14 +32,8 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-3 justify-self-end">
+        <div className="justify-self-end">
           <ThemeToggle />
-          <Link
-            href="/#contact"
-            className="rounded-[10px] bg-accent px-5 py-2 text-base font-semibold text-accent-text transition-all hover:bg-accent-hover hover:shadow-md md:px-6 md:py-2.5 lg:px-7 lg:py-3 lg:text-lg"
-          >
-            Hire Me
-          </Link>
         </div>
       </nav>
     </header>
