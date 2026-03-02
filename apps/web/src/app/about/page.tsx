@@ -31,10 +31,18 @@ export default function AboutPage() {
               developer tooling at Botpress, previously automating enterprise
               workflows at LIDD Consultants.
             </p>
-            <p className="text-base md:text-lg text-body leading-relaxed mb-6">
+            <p className="text-base md:text-lg text-body leading-relaxed mb-4">
               McGill CS graduate with a minor in Management (3.85 GPA).
               Bilingual in English and French. I enjoy building tools that make
               developers more productive and systems that scale.
+            </p>
+            <p className="text-sm text-body mb-6">
+              {LANGUAGES.map((lang, i) => (
+                <span key={lang.name}>
+                  {i > 0 && " \u00b7 "}
+                  {lang.name} ({lang.level})
+                </span>
+              ))}
             </p>
             <a
               href="/Eric_Huang_Software-can.pdf"
@@ -59,7 +67,7 @@ export default function AboutPage() {
               {"// skills"}
             </p>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading mb-10">
-              Technical Skills
+              Skills
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -89,24 +97,6 @@ export default function AboutPage() {
               ))}
             </div>
 
-            {/* Languages */}
-            <div className="mt-8 card-glow bg-card rounded-xl border border-border p-5 shadow-[0_2px_8px_rgba(12,27,33,0.06)]">
-              <p className="text-xs uppercase tracking-wider text-muted mb-3 font-semibold">
-                Languages
-              </p>
-              <div className="flex gap-6">
-                {LANGUAGES.map((lang) => (
-                  <div key={lang.name} className="flex items-center gap-2">
-                    <span className="text-body text-sm font-medium">
-                      {lang.name}
-                    </span>
-                    <span className="text-muted text-xs font-mono">
-                      ({lang.level})
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </section>
 

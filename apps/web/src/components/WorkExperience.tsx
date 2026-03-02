@@ -63,7 +63,7 @@ function WorkCard({
           <h3 className="text-lg font-semibold text-heading truncate">
             {exp.company}
           </h3>
-          <p className="text-sm text-muted">{exp.position}</p>
+          <p className="text-sm text-body">{exp.position}</p>
         </div>
         <span className="text-muted flex-shrink-0">
           <ChevronIcon expanded={isExpanded} />

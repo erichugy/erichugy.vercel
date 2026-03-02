@@ -89,7 +89,7 @@ export default function EducationTimeline() {
                         <h3 className="text-lg font-semibold text-heading truncate">
                           {entry.school}
                         </h3>
-                        <p className="text-sm text-muted">
+                        <p className="text-sm text-body">
                           {entry.degree}
                           {SHOW_DATES && (
                             <span className="font-mono text-xs">
@@ -210,7 +210,7 @@ export default function EducationTimeline() {
                                               <p className="text-sm font-semibold text-heading">
                                                 {vol.role}
                                               </p>
-                                              <p className="text-sm text-muted">
+                                              <p className="text-sm text-body">
                                                 {vol.organization}
                                                 {SHOW_DATES && (
                                                   <span className="font-mono text-xs">
