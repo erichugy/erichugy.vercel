@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -36,12 +37,12 @@ export default function Hero() {
               >
                 Download Resume
               </a>
-              <a
+              <Link
                 href="/#contact"
                 className="border border-accent text-accent hover:bg-accent/10 px-6 py-2.5 rounded-[10px] transition-all font-semibold text-sm"
               >
                 Get in Touch
-              </a>
+              </Link>
             </div>
           </div>
 
