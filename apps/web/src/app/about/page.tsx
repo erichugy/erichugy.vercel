@@ -1,9 +1,10 @@
 import Activities from "@/components/Activities";
+import EducationTimeline from "@/components/EducationTimeline";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import EducationTimeline from "@/components/EducationTimeline";
+import TechSkills from "@/components/TechSkills";
 import WorkExperience from "@/components/WorkExperience";
-import { CERTIFICATIONS, LANGUAGES, SHOW_DATES, TECHNICAL_SKILLS } from "@/lib/about-data";
+import { CERTIFICATIONS, LANGUAGES, SHOW_DATES } from "@/lib/about-data";
 
 export const metadata = {
   title: "About Me | Eric Huang",
@@ -70,32 +71,7 @@ export default function AboutPage() {
               Skills
             </h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              {Object.entries(TECHNICAL_SKILLS).map(([category, skills]) => (
-                <div
-                  key={category}
-                  className="card-glow bg-card rounded-xl border border-border p-5 shadow-[0_2px_8px_rgba(12,27,33,0.06)]"
-                >
-                  <p className="text-xs uppercase tracking-wider text-muted mb-3 font-semibold">
-                    {category === "dataML"
-                      ? "Data / ML"
-                      : category === "devOps"
-                        ? "DevOps / Tools"
-                        : category}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="bg-page text-body text-xs px-2 py-1 rounded-md font-mono"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <TechSkills />
 
           </div>
         </section>
