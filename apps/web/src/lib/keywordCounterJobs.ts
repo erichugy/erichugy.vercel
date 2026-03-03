@@ -18,7 +18,7 @@ export type KeywordCounterInput = {
   startDate: string;
   endDate?: string;
   verbose?: boolean;
-}
+};
 
 export type MessageMatchRow = {
   conversationId: string;
@@ -26,7 +26,7 @@ export type MessageMatchRow = {
   sender: string;
   messageId: string;
   message: string;
-}
+};
 
 export type SummaryResult = {
   runId: string;
@@ -63,7 +63,7 @@ export type KeywordCounterJob = {
     matchedConversations: number;
     elapsedSeconds: number;
   };
-}
+};
 
 const outputRoot = path.join(process.cwd(), ".tmp", "keyword-counter");
 

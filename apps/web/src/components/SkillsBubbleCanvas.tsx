@@ -15,7 +15,7 @@ type BubbleState = {
   vy: number;
   radius: number;
   mass: number;
-}
+};
 
 const RESTITUTION = 0.7;
 const DAMPING = 0.9985;

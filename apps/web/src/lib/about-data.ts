@@ -5,14 +5,14 @@ export type WorkExperience = {
   description: string;
   techStack: string[];
   highlights: string[];
-}
+};
 
 export type VolunteerEntry = {
   role: string;
   organization: string;
   duration: string;
   description: string;
-}
+};
 
 export type EducationEntry = {
   school: string;
@@ -23,26 +23,26 @@ export type EducationEntry = {
   coursework?: string[];
   clubs?: string[];
   volunteer?: VolunteerEntry[];
-}
+};
 
 export type Certification = {
   name: string;
   issuer: string;
   date: string;
   credentialId?: string;
-}
+};
 
 export type Activity = {
   title: string;
   description: string;
   icon: string;
-}
+};
 
 export type Language = {
   name: string;
   level: string;
   details: string;
-}
+};
 
 export const WORK_EXPERIENCES: WorkExperience[] = [
   {
