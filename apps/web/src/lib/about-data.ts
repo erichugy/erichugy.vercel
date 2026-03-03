@@ -1,5 +1,3 @@
-// ── Types ──────────────────────────────────────────────────────────────────
-
 export interface WorkExperience {
   company: string;
   position: string;
@@ -45,8 +43,6 @@ export interface Language {
   level: string;
   details: string;
 }
-
-// ── Data ───────────────────────────────────────────────────────────────────
 
 export const WORK_EXPERIENCES: WorkExperience[] = [
   {

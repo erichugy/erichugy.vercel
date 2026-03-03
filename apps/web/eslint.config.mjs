@@ -12,7 +12,6 @@ const eslintConfig = [
   {
     rules: {
       eqeqeq: ["error", "always"],
-      curly: ["error", "all"],
       "no-var": "error",
       "prefer-const": "error",
       "object-shorthand": ["error", "always"],

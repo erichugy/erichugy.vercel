@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 type Status = "idle" | "sending" | "success" | "error";
 
 const EMAIL = "ehugy.business@gmail.com";
-const WEBHOOK_URL = process.env.NEXT_PUBLIC_CONTACT_WEBHOOK_URL;
+const WEBHOOK_URL = process.env.CONTACT_WEBHOOK_URL;
 
 export default function ContactCTA() {
   const [name, setName] = useState("");
