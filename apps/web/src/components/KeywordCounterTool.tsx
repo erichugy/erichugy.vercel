@@ -73,7 +73,12 @@ export default function KeywordCounterTool() {
       }
 
       const raw = await response.json();
-      const data = jobResponseSchema.parse(raw);
+      const parsed = jobResponseSchema.safeParse(raw);
+      if (!parsed.success) {
+        console.error("Malformed job status response:", parsed.error);
+        throw new Error("Received malformed job status from server.");
+      }
+      const data = parsed.data;
       setJob(data);
 
       if (data.status === "completed" || data.status === "failed") {
