@@ -15,7 +15,8 @@ def _get_client() -> cohere.Client:
             if _client is None:
                 if not COHERE_API_KEY:
                     raise RuntimeError(
-                        "COHERE_API_KEY environment variable is not set."
+                        "COHERE_API_KEY environment variable is not set. "
+                        "Set COHERE_API_KEY to a valid Cohere API key to enable ML-based sentiment classification."
                     )
                 _client = cohere.Client(COHERE_API_KEY)
     return _client

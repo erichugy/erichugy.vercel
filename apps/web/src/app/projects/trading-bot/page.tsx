@@ -96,7 +96,13 @@ export default function TradingBotPage() {
         );
       }
 
-      const raw = await response.json();
+      let raw: unknown;
+      try {
+        raw = await response.json();
+      } catch {
+        setError("Received an unexpected response format from the server.");
+        return;
+      }
       const data = analysisResultSchema.parse(raw);
       setResult(data);
     } catch (submitError) {
