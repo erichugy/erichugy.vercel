@@ -31,7 +31,12 @@ def analyse_news(article_objs: List[Article], fast: bool = False):
             title = article.headline
         else:
             title, text_lines = get_page_text(article.url)
-            text_lines.append(title)
+            # NOTE: fall back to headline if scrape returned no usable content
+            text_lines = [line for line in text_lines if line.strip()]
+            if not text_lines:
+                text_lines = [article.headline]
+            if not title:
+                title = article.headline
 
         # Use Cohere ML model if API key is available, otherwise fall back to word-based
         if COHERE_API_KEY:

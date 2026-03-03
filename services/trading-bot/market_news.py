@@ -77,10 +77,12 @@ def get_page_text(url):
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SentimentBot/1.0)"}
     try:
         response = requests.get(url, timeout=10, headers=headers)
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
+        logger.warning("Failed to fetch article from %s: %s", url, e)
         return ("", [])
 
     if not response.ok:
+        logger.warning("Non-2xx response (%d) from %s", response.status_code, url)
         return ("", [])
 
     try:

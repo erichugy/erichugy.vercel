@@ -16,6 +16,8 @@ except (TypeError, ValueError):
     )
     MAX_ARTICLES = 10
 
+MAX_ARTICLES = max(1, min(MAX_ARTICLES, 100))
+
 # NOTE: warn early so container logs surface missing credentials before the first request fails
 if not ALPACA_API_KEY or not ALPACA_API_SECRET:
     logger.warning("ALPACA_API_KEY or ALPACA_API_SECRET not set — /analyze will fail")

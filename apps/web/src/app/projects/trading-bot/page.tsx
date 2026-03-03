@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 
 const articleSchema = z.object({
@@ -54,6 +54,12 @@ export default function TradingBotPage() {
   const [error, setError] = useState<string | null>(null);
   const [articlesExpanded, setArticlesExpanded] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
