@@ -11,7 +11,7 @@ class Article:
             self.date = datetime.strptime(date, r"%Y-%m-%dT%H:%M:%SZ")
         except (ValueError, TypeError) as e:
             logger.warning("Failed to parse date '%s': %s — using current time", date, e)
-            self.date = datetime.now()
+            self.date = datetime.utcnow()
         self.headline = headline
         self.symbol = symbol
         self.content = ()
@@ -38,7 +38,7 @@ class Article:
                         item["symbols"],
                     )
                 )
-            except (KeyError, ValueError) as e:
+            except (KeyError, ValueError, TypeError) as e:
                 # NOTE: skip malformed articles rather than aborting the entire batch
                 logger.warning("Skipping article at index %d: %s", i, e)
         return articles

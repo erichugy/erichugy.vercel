@@ -1,10 +1,13 @@
 import json
+import logging
 
 import requests
 from bs4 import BeautifulSoup
 
 from article import Article
 from config import ALPACA_API_KEY, ALPACA_API_SECRET
+
+logger = logging.getLogger(__name__)
 
 
 def get_articles(api_key=None, api_secret=None, symbol: str = "AAPL"):
@@ -74,8 +77,8 @@ def get_page_text(url):
     headers = {"User-Agent": "Mozilla/5.0 (compatible; SentimentBot/1.0)"}
     try:
         response = requests.get(url, timeout=10, headers=headers)
-    except requests.exceptions.RequestException as e:
-        return ("", [f"Failed to fetch article: {e}"])
+    except requests.exceptions.RequestException:
+        return ("", [])
 
     if not response.ok:
         return ("", [])
@@ -94,4 +97,5 @@ def get_page_text(url):
 
         return (title, new_text)
     except Exception:
+        logger.warning("Failed to parse page content from %s", url, exc_info=True)
         return ("", [])

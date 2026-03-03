@@ -6,7 +6,15 @@ logger = logging.getLogger(__name__)
 ALPACA_API_KEY = os.environ.get("ALPACA_API_KEY", "")
 ALPACA_API_SECRET = os.environ.get("ALPACA_API_SECRET", "")
 COHERE_API_KEY = os.environ.get("COHERE_API_KEY", "")
-MAX_ARTICLES = int(os.environ.get("MAX_ARTICLES", "10"))
+_raw_max_articles = os.environ.get("MAX_ARTICLES")
+try:
+    MAX_ARTICLES = int(_raw_max_articles) if _raw_max_articles is not None else 10
+except (TypeError, ValueError):
+    logger.warning(
+        "Invalid MAX_ARTICLES value %r, falling back to default 10",
+        _raw_max_articles,
+    )
+    MAX_ARTICLES = 10
 
 # NOTE: warn early so container logs surface missing credentials before the first request fails
 if not ALPACA_API_KEY or not ALPACA_API_SECRET:
