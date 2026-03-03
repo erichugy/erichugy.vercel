@@ -51,6 +51,16 @@ function isRateLimited(ip: string): boolean {
         rateLimiter.delete(key);
       }
     }
+
+    // NOTE: hard cap — evict oldest entries if map still over limit after expiry cleanup
+    if (rateLimiter.size >= MAX_RATE_ENTRIES) {
+      const keysIterator = rateLimiter.keys();
+      while (rateLimiter.size >= MAX_RATE_ENTRIES) {
+        const next = keysIterator.next();
+        if (next.done) break;
+        rateLimiter.delete(next.value);
+      }
+    }
   }
 
   const entry = rateLimiter.get(ip);
@@ -73,7 +83,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const ip = (req as NextRequest & { ip?: string }).ip ?? null;
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    ?? req.headers.get("x-real-ip")?.trim()
+    ?? null;
   if (ip && isRateLimited(ip)) {
     return NextResponse.json(
       { error: "Too many messages. Please try again later." },
