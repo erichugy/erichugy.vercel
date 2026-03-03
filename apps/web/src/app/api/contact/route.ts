@@ -4,9 +4,9 @@ import { z } from "zod";
 export const runtime = "nodejs";
 
 const contactBodySchema = z.object({
-  name: z.string().min(1, "Name is required").max(200),
-  email: z.string().email("Invalid email address"),
-  message: z.string().min(1, "Message is required").max(2000),
+  name: z.string().trim().min(1, "Name is required").max(200),
+  email: z.string().email("Invalid email address").max(320),
+  message: z.string().trim().min(1, "Message is required").max(2000),
 });
 
 // Per-IP rate limiting — survives Next.js hot reload via globalThis
@@ -34,6 +34,7 @@ if (!globalState.__contactRateLimiterCleanup) {
       }
     }
   }, CLEANUP_INTERVAL_MS);
+  globalState.__contactRateLimiterCleanup.unref();
 }
 
 function isRateLimited(ip: string): boolean {
@@ -58,8 +59,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isRateLimited(ip)) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    ?? req.headers.get("x-real-ip")?.trim()
+    ?? null;
+  if (ip && isRateLimited(ip)) {
     return NextResponse.json(
       { error: "Too many messages. Please try again later." },
       { status: 429 },
@@ -83,11 +86,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsed.data),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
   } catch {
     return NextResponse.json(

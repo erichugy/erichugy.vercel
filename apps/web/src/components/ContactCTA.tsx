@@ -18,6 +18,7 @@ export default function ContactCTA() {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (isSending) return;
 
     setStatus("sending");
     setErrorMsg(null);
