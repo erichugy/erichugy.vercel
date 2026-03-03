@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const contactBodySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
@@ -37,8 +38,21 @@ if (!globalState.__contactRateLimiterCleanup) {
   globalState.__contactRateLimiterCleanup.unref();
 }
 
+const MAX_RATE_ENTRIES = 10_000;
+
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
+
+  // NOTE: opportunistic cleanup — prune expired entries during each check
+  // so memory stays bounded even if the periodic cleanup timer doesn't fire
+  if (rateLimiter.size > MAX_RATE_ENTRIES) {
+    for (const [key, entry] of rateLimiter) {
+      if (now - entry.windowStart > WINDOW_MS) {
+        rateLimiter.delete(key);
+      }
+    }
+  }
+
   const entry = rateLimiter.get(ip);
 
   if (!entry || now - entry.windowStart > WINDOW_MS) {
@@ -59,9 +73,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    ?? req.headers.get("x-real-ip")?.trim()
-    ?? null;
+  const ip = (req as NextRequest & { ip?: string }).ip ?? null;
   if (ip && isRateLimited(ip)) {
     return NextResponse.json(
       { error: "Too many messages. Please try again later." },
@@ -85,22 +97,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: firstError }, { status: 400 });
   }
 
+  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    timeout = setTimeout(() => controller.abort(), 10_000);
     const res = await fetch(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(parsed.data),
       signal: controller.signal,
     });
-    clearTimeout(timeout);
     if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
   } catch {
     return NextResponse.json(
       { error: "Failed to send message. Please try again." },
       { status: 500 },
     );
+  } finally {
+    if (timeout !== undefined) {
+      clearTimeout(timeout);
+    }
   }
 
   return NextResponse.json({ success: true });
