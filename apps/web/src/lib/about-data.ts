@@ -1,4 +1,4 @@
-export interface WorkExperience {
+export type WorkExperience = {
   company: string;
   position: string;
   duration: string;
@@ -7,14 +7,14 @@ export interface WorkExperience {
   highlights: string[];
 }
 
-export interface VolunteerEntry {
+export type VolunteerEntry = {
   role: string;
   organization: string;
   duration: string;
   description: string;
 }
 
-export interface EducationEntry {
+export type EducationEntry = {
   school: string;
   degree: string;
   duration: string;
@@ -25,20 +25,20 @@ export interface EducationEntry {
   volunteer?: VolunteerEntry[];
 }
 
-export interface Certification {
+export type Certification = {
   name: string;
   issuer: string;
   date: string;
   credentialId?: string;
 }
 
-export interface Activity {
+export type Activity = {
   title: string;
   description: string;
   icon: string;
 }
 
-export interface Language {
+export type Language = {
   name: string;
   level: string;
   details: string;

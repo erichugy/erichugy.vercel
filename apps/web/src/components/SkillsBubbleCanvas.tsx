@@ -8,7 +8,7 @@ import {
   CATEGORY_LABELS,
 } from "@/lib/skill-metadata";
 
-interface BubbleState {
+type BubbleState = {
   x: number;
   y: number;
   vx: number;
@@ -51,7 +51,7 @@ export default function SkillsBubbleCanvas() {
 
       const scale = Math.min(Math.max(w / 900, 0.6), 1.2);
 
-      // Sort categories by skill count descending for placement
+      // NOTE: larger bubbles placed first — greedy placement succeeds more often with descending radii
       const indexed = categories.map((cat, i) => ({
         index: i,
         skillCount: cat.skills.length,
@@ -119,7 +119,6 @@ export default function SkillsBubbleCanvas() {
       physicsRef.current = bubbles;
       setDiameters(newDiameters);
 
-      // Set initial positions on DOM
       for (let i = 0; i < bubbles.length; i++) {
         const el = bubbleRefs.current[i];
         if (el) {
@@ -137,12 +136,12 @@ export default function SkillsBubbleCanvas() {
         return;
       }
 
+      // NOTE: physics tick — damping, integrate, wall bounce, elastic collision, separation, DOM sync
       for (const b of bubbles) {
-        // 1. Damping
         b.vx *= DAMPING;
         b.vy *= DAMPING;
 
-        // Inject small random nudge if nearly stopped
+        // NOTE: prevents bubbles from freezing in perfect equilibrium
         const speed = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
         if (speed < 0.3) {
           const angle = Math.random() * Math.PI * 2;
@@ -150,11 +149,9 @@ export default function SkillsBubbleCanvas() {
           b.vy += Math.sin(angle) * 0.1;
         }
 
-        // 2. Update position
         b.x += b.vx;
         b.y += b.vy;
 
-        // 3. Wall collisions
         if (b.x - b.radius < 0) {
           b.x = b.radius;
           b.vx = Math.abs(b.vx) * RESTITUTION;
@@ -173,7 +170,6 @@ export default function SkillsBubbleCanvas() {
         }
       }
 
-      // 4. Bubble-bubble collisions
       for (let i = 0; i < bubbles.length; i++) {
         for (let j = i + 1; j < bubbles.length; j++) {
           const a = bubbles[i];
@@ -184,7 +180,7 @@ export default function SkillsBubbleCanvas() {
           const minDist = a.radius + bub.radius;
 
           if (dist < minDist) {
-            // Collision normal (random direction if exactly overlapping)
+            // NOTE: degenerate case — arbitrarily separate co-located bubbles
             let nx: number, ny: number;
             if (dist === 0) {
               const angle = Math.random() * Math.PI * 2;
@@ -201,7 +197,6 @@ export default function SkillsBubbleCanvas() {
             const dvn = dvx * nx + dvy * ny;
 
             if (dvn > 0) {
-              // Approaching
               const impulse =
                 (-(1 + RESTITUTION) * dvn) / (1 / a.mass + 1 / bub.mass);
               a.vx += (impulse / a.mass) * nx;
@@ -221,7 +216,6 @@ export default function SkillsBubbleCanvas() {
         }
       }
 
-      // 5. Extra separation pass to resolve chain overlaps
       for (let iter = 0; iter < 2; iter++) {
         for (let i = 0; i < bubbles.length; i++) {
           for (let j = i + 1; j < bubbles.length; j++) {
@@ -245,7 +239,6 @@ export default function SkillsBubbleCanvas() {
         }
       }
 
-      // 6. Update DOM
       for (let i = 0; i < bubbles.length; i++) {
         const el = bubbleRefs.current[i];
         if (el) {

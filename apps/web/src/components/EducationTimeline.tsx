@@ -42,9 +42,7 @@ export default function EducationTimeline() {
           Education
         </h2>
 
-        {/* Timeline */}
         <div className="relative">
-          {/* Vertical accent line */}
           <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-accent/30" />
 
           <div className="space-y-6">
@@ -57,7 +55,6 @@ export default function EducationTimeline() {
 
               return (
                 <div key={index} className="relative pl-10">
-                  {/* Timeline dot — larger for school nodes */}
                   <div
                     className={`absolute left-0 top-[18px] w-[24px] h-[24px] rounded-full border-[2px] transition-colors duration-300 ${
                       isExpanded
@@ -70,13 +67,11 @@ export default function EducationTimeline() {
                     )}
                   </div>
 
-                  {/* Card */}
                   <div
                     className={`card-glow bg-card rounded-xl border border-border transition-all duration-300 ${
                       isExpanded ? "shadow-sm" : ""
                     }`}
                   >
-                    {/* Header — always visible */}
                     <button
                       onClick={() => hasExpandableContent && toggle(index)}
                       className={`w-full text-left px-5 py-4 flex items-center justify-between gap-4 ${
@@ -115,7 +110,6 @@ export default function EducationTimeline() {
                       )}
                     </button>
 
-                    {/* Expandable content */}
                     {hasExpandableContent && (
                       <div
                         className="grid transition-[grid-template-rows] duration-300 ease-in-out"
@@ -148,7 +142,6 @@ export default function EducationTimeline() {
                                 </div>
                               )}
 
-                              {/* Coursework pills */}
                               {entry.coursework &&
                                 entry.coursework.length > 0 && (
                                   <div>
@@ -168,7 +161,6 @@ export default function EducationTimeline() {
                                   </div>
                                 )}
 
-                              {/* Clubs pills */}
                               {entry.clubs && entry.clubs.length > 0 && (
                                 <div>
                                   <p className="font-mono text-xs text-muted mb-2">
@@ -187,7 +179,6 @@ export default function EducationTimeline() {
                                 </div>
                               )}
 
-                              {/* Volunteer sub-entries */}
                               {entry.volunteer &&
                                 entry.volunteer.length > 0 && (
                                   <div>
@@ -195,7 +186,6 @@ export default function EducationTimeline() {
                                       Volunteer &amp; Club Work
                                     </p>
                                     <div className="relative">
-                                      {/* Sub-timeline line */}
                                       <div className="absolute left-[7px] top-2 bottom-2 w-[1.5px] bg-accent/20" />
 
                                       <div className="space-y-4">
@@ -204,7 +194,6 @@ export default function EducationTimeline() {
                                             key={vIndex}
                                             className="relative pl-7"
                                           >
-                                            {/* Smaller dot for volunteer sub-items */}
                                             <div className="absolute left-0 top-[8px] w-[16px] h-[16px] rounded-full border-[2px] border-accent/60 bg-page" />
 
                                             <div>

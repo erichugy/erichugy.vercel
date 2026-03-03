@@ -53,7 +53,6 @@ function WorkCard({
         isExpanded ? "shadow-sm" : ""
       }`}
     >
-      {/* Header — always visible */}
       <button
         onClick={onToggle}
         className="w-full text-left px-5 py-4 flex items-center justify-between gap-4 cursor-pointer"
@@ -70,7 +69,6 @@ function WorkCard({
         </span>
       </button>
 
-      {/* Expandable content */}
       <div
         className="grid transition-[grid-template-rows] duration-300 ease-in-out"
         style={{ gridTemplateRows: isExpanded ? "1fr" : "0fr" }}
@@ -78,7 +76,6 @@ function WorkCard({
         <div className="overflow-hidden">
           <div className="px-5 pb-5">
             <div className="border-t border-border pt-4 space-y-4">
-              {/* Description & highlights */}
               <ul className="space-y-2">
                 {[exp.description, ...exp.highlights].map((text, i) => (
                   <li
@@ -93,7 +90,6 @@ function WorkCard({
                 ))}
               </ul>
 
-              {/* Tech stack tags */}
               <div className="flex flex-wrap gap-2 pt-1">
                 {exp.techStack.map((tech) => (
                   <span
@@ -129,7 +125,6 @@ export default function WorkExperience() {
           Experience
         </h2>
 
-        {/* Timeline */}
         <div className="relative">
           {/* Continuous vertical line (desktop only) */}
           <div className="hidden md:block absolute left-[120px] ml-[27px] top-[30px] bottom-[30px] w-[2px] bg-border" />
