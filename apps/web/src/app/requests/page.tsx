@@ -606,17 +606,58 @@ const styles = `
   .rb-tab-context-menu button:hover { background: #f6f8fa; }
   .rb-tab-context-menu button.rb-danger { color: #cf222e; }
 
-  /* Filter area */
+  /* Filter area - vertical tree layout */
   .rb-filter-area {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
     padding: 8px 20px;
     border-bottom: 1px solid #d0d7de;
     background: #ffffff;
     font-size: 13px;
-    min-height: 40px;
+  }
+  .rb-filter-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .rb-filter-header-label {
+    font-weight: 600;
+    color: #24292f;
+    font-size: 13px;
+  }
+  .rb-filter-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .rb-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rb-filter-indent {
+    padding-left: 20px;
+  }
+  .rb-filter-indent-2 {
+    padding-left: 40px;
+  }
+  .rb-filter-add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px dashed #d0d7de;
+    background: none;
+    cursor: pointer;
+    color: #656d76;
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.1s;
+  }
+  .rb-filter-add-btn:hover {
+    border-color: #0969da;
+    color: #0969da;
   }
   .rb-filter-btn {
     display: flex;
@@ -664,6 +705,12 @@ const styles = `
     font-weight: 600;
     padding: 0 2px;
   }
+  .rb-filter-logic-label {
+    color: #656d76;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 0;
+  }
   .rb-group-bracket {
     color: #656d76;
     font-size: 16px;
@@ -682,13 +729,20 @@ const styles = `
     font-family: inherit;
   }
   .rb-group-logic-toggle:hover { border-color: #0969da; color: #0969da; }
+  .rb-filter-clear-all {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #cf222e;
+    font-size: 12px;
+    font-family: inherit;
+    padding: 0 4px;
+  }
+  .rb-filter-clear-all:hover { text-decoration: underline; }
 
   /* Filter dropdown */
   .rb-filter-dropdown-wrap { position: relative; display: inline-flex; }
   .rb-filter-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
     background: #ffffff;
     border: 1px solid #d0d7de;
     border-radius: 8px;
@@ -729,9 +783,6 @@ const styles = `
   /* Sub-menu */
   .rb-submenu-wrap { position: relative; }
   .rb-submenu {
-    position: absolute;
-    top: -4px;
-    left: 100%;
     background: #ffffff;
     border: 1px solid #d0d7de;
     border-radius: 8px;
@@ -898,6 +949,7 @@ export default function RequestBinPage(): React.ReactNode {
   const [pendingInputValue, setPendingInputValue] = useState("");
   const [pendingInputValueTo, setPendingInputValueTo] = useState("");
   const [addingToGroupId, setAddingToGroupId] = useState<string | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(null);
 
   // Tab context menu
   const [tabContextMenuId, setTabContextMenuId] = useState<string | null>(null);
@@ -964,6 +1016,7 @@ export default function RequestBinPage(): React.ReactNode {
         setPendingInputValue("");
         setPendingInputValueTo("");
         setAddingToGroupId(null);
+        setDropdownPosition(null);
       }
     };
     document.addEventListener("mousedown", handleClick);
@@ -1168,6 +1221,7 @@ export default function RequestBinPage(): React.ReactNode {
     setPendingInputValue("");
     setPendingInputValueTo("");
     setAddingToGroupId(null);
+    setDropdownPosition(null);
   }, [pendingMethodSelections, pendingInputValue, pendingInputValueTo, addFilter, addingToGroupId]);
 
   const handleMethodSingleSelect = useCallback((method: string) => {
@@ -1176,6 +1230,7 @@ export default function RequestBinPage(): React.ReactNode {
     setActiveFieldMenu(null);
     setActiveOperatorMenu(null);
     setAddingToGroupId(null);
+    setDropdownPosition(null);
   }, [addFilter, addingToGroupId]);
 
   // --- View handlers ---
@@ -1360,60 +1415,228 @@ export default function RequestBinPage(): React.ReactNode {
   const allFilters = getAllFilters(filterState);
   const matchCount = searchState.query.trim() ? displayedRequests.length : null;
 
-  // --- Render filter chips ---
+  // --- Open filter dropdown from a [+] button ---
 
-  function renderFilterChips(): React.ReactNode {
-    if (filterState.groups.length === 0) return null;
-
-    return filterState.groups.map((group, groupIdx) => (
-      <span key={group.id} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-        {groupIdx > 0 && <span className="rb-chip-logic">AND</span>}
-        {filterState.groups.length > 1 && group.filters.length > 0 && (
-          <span className="rb-group-bracket">(</span>
-        )}
-        {group.filters.map((f, filterIdx) => (
-          <span key={f.id} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-            {filterIdx > 0 && (
-              <button
-                type="button"
-                className="rb-group-logic-toggle"
-                onClick={() => toggleGroupLogic(group.id)}
-                title={`Click to toggle ${group.logic === "AND" ? "OR" : "AND"}`}
-              >
-                {group.logic}
-              </button>
-            )}
-            <span className="rb-chip">
-              <span style={{ fontWeight: 600 }}>{f.field}</span>
-              {" "}
-              {operatorLabel(f.operator)}
-              {" "}
-              {filterDisplayValue(f)}
-              <button
-                type="button"
-                className="rb-chip-remove"
-                onClick={() => removeFilter(f.id)}
-                aria-label="Remove filter"
-              >
-                ×
-              </button>
-            </span>
-          </span>
-        ))}
-        {filterState.groups.length > 1 && group.filters.length > 0 && (
-          <span className="rb-group-bracket">)</span>
-        )}
-      </span>
-    ));
+  function openDropdownFromButton(e: React.MouseEvent<HTMLButtonElement>, groupId: string | null) {
+    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+    const dropdownWidth = 220;
+    const left = rect.right + dropdownWidth > window.innerWidth
+      ? rect.left - dropdownWidth
+      : rect.right + 4;
+    setDropdownPosition({ top: rect.bottom + 4, left: Math.max(0, left) });
+    setAddingToGroupId(groupId);
+    setFilterDropdownOpen(true);
+    setActiveFieldMenu(null);
+    setActiveOperatorMenu(null);
   }
 
-  // --- Render filter dropdown ---
+  // --- Render filter tree (vertical layout) ---
 
-  function renderFilterDropdown(): React.ReactNode {
-    if (!filterDropdownOpen) return null;
+  function renderFilterTree(): React.ReactNode {
+    const hasFilters = allFilters.length > 0;
+
+    if (!hasFilters) {
+      // No filters: show "Filters" label + [+] button inline
+      return (
+        <div className="rb-filter-header">
+          <span className="rb-filter-header-label">Filters</span>
+          <button
+            type="button"
+            className="rb-filter-add-btn"
+            onClick={(e) => openDropdownFromButton(e, null)}
+            title="Add filter"
+          >
+            +
+          </button>
+        </div>
+      );
+    }
+
+    // Has filters: vertical tree
+    const rows: React.ReactNode[] = [];
+    const multipleGroups = filterState.groups.length > 1;
+
+    filterState.groups.forEach((group, groupIdx) => {
+      // AND label between groups (top-level groups are always AND-joined)
+      if (groupIdx > 0) {
+        rows.push(
+          <div key={`and-${group.id}`} className="rb-filter-row rb-filter-indent">
+            <span className="rb-filter-logic-label">AND</span>
+          </div>,
+        );
+      }
+
+      // If multiple groups, show group bracket
+      if (multipleGroups && group.filters.length > 0) {
+        // Opening bracket row with first filter
+        group.filters.forEach((f, filterIdx) => {
+          const indentClass = multipleGroups ? "rb-filter-indent-2" : "rb-filter-indent";
+
+          if (filterIdx > 0) {
+            // AND/OR toggle between filters in same group
+            rows.push(
+              <div key={`logic-${f.id}`} className={`rb-filter-row ${indentClass}`}>
+                {filterIdx === 1 && multipleGroups ? (
+                  <span className="rb-group-bracket" style={{ marginRight: 4 }}>&nbsp;&nbsp;</span>
+                ) : null}
+                <button
+                  type="button"
+                  className="rb-group-logic-toggle"
+                  onClick={() => toggleGroupLogic(group.id)}
+                  title={`Click to toggle ${group.logic === "AND" ? "OR" : "AND"}`}
+                >
+                  {group.logic}
+                </button>
+              </div>,
+            );
+          }
+
+          rows.push(
+            <div key={f.id} className={`rb-filter-row ${indentClass}`}>
+              {filterIdx === 0 && multipleGroups && (
+                <span className="rb-group-bracket" style={{ marginRight: 4 }}>(</span>
+              )}
+              {filterIdx > 0 && multipleGroups && (
+                <span className="rb-group-bracket" style={{ marginRight: 4, visibility: "hidden" }}>(</span>
+              )}
+              <span className="rb-chip">
+                <span style={{ fontWeight: 600 }}>{f.field}</span>
+                {" "}
+                {operatorLabel(f.operator)}
+                {" "}
+                {filterDisplayValue(f)}
+                <button
+                  type="button"
+                  className="rb-chip-remove"
+                  onClick={() => removeFilter(f.id)}
+                  aria-label="Remove filter"
+                >
+                  ×
+                </button>
+              </span>
+            </div>,
+          );
+        });
+
+        // [+] and closing bracket for group
+        rows.push(
+          <div key={`add-${group.id}`} className="rb-filter-row rb-filter-indent-2">
+            <span className="rb-group-bracket" style={{ marginRight: 4, visibility: "hidden" }}>(</span>
+            <button
+              type="button"
+              className="rb-filter-add-btn"
+              onClick={(e) => openDropdownFromButton(e, group.id)}
+              title="Add filter to group"
+            >
+              +
+            </button>
+            <span className="rb-group-bracket" style={{ marginLeft: 4 }}>)</span>
+          </div>,
+        );
+      } else {
+        // Single group or group within single-group state
+        group.filters.forEach((f, filterIdx) => {
+          if (filterIdx > 0) {
+            // AND/OR toggle between filters
+            rows.push(
+              <div key={`logic-${f.id}`} className="rb-filter-row rb-filter-indent">
+                <button
+                  type="button"
+                  className="rb-group-logic-toggle"
+                  onClick={() => toggleGroupLogic(group.id)}
+                  title={`Click to toggle ${group.logic === "AND" ? "OR" : "AND"}`}
+                >
+                  {group.logic}
+                </button>
+              </div>,
+            );
+          }
+
+          rows.push(
+            <div key={f.id} className="rb-filter-row rb-filter-indent">
+              <span className="rb-chip">
+                <span style={{ fontWeight: 600 }}>{f.field}</span>
+                {" "}
+                {operatorLabel(f.operator)}
+                {" "}
+                {filterDisplayValue(f)}
+                <button
+                  type="button"
+                  className="rb-chip-remove"
+                  onClick={() => removeFilter(f.id)}
+                  aria-label="Remove filter"
+                >
+                  ×
+                </button>
+              </span>
+            </div>,
+          );
+        });
+
+        // [+] button at the end of the group
+        rows.push(
+          <div key={`add-${group.id}`} className="rb-filter-row rb-filter-indent">
+            <button
+              type="button"
+              className="rb-filter-add-btn"
+              onClick={(e) => openDropdownFromButton(e, group.id)}
+              title="Add filter to group"
+            >
+              +
+            </button>
+          </div>,
+        );
+      }
+    });
+
+    // Top-level [+] button to add a new filter (to first group or new)
+    rows.push(
+      <div key="add-top" className="rb-filter-row rb-filter-indent">
+        <button
+          type="button"
+          className="rb-filter-add-btn"
+          onClick={(e) => openDropdownFromButton(e, null)}
+          title="Add filter"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="rb-filter-clear-all"
+          onClick={clearAllFilters}
+        >
+          Clear all
+        </button>
+      </div>,
+    );
 
     return (
-      <div className="rb-filter-dropdown">
+      <>
+        <div className="rb-filter-header">
+          <span className="rb-filter-header-label">Filters</span>
+        </div>
+        <div className="rb-filter-tree">
+          {rows}
+        </div>
+      </>
+    );
+  }
+
+  // --- Render filter dropdown (fixed positioning) ---
+
+  function renderFilterDropdown(): React.ReactNode {
+    if (!filterDropdownOpen || !dropdownPosition) return null;
+
+    return (
+      <div
+        className="rb-filter-dropdown"
+        ref={filterDropdownRef}
+        style={{
+          position: "fixed",
+          top: dropdownPosition.top,
+          left: dropdownPosition.left,
+        }}
+      >
         <div className="rb-filter-dropdown-title">Add Filter...</div>
         <div className="rb-filter-dropdown-divider" />
         <button
@@ -1422,6 +1645,7 @@ export default function RequestBinPage(): React.ReactNode {
           onClick={() => {
             addFilterGroup();
             setFilterDropdownOpen(false);
+            setDropdownPosition(null);
           }}
         >
           <span>( ) Add filter group</span>
@@ -1432,44 +1656,78 @@ export default function RequestBinPage(): React.ReactNode {
             <button
               type="button"
               className="rb-filter-dropdown-item"
-              onMouseEnter={() => {
+              onMouseEnter={(e) => {
                 setActiveFieldMenu(ff.value);
                 setActiveOperatorMenu(null);
                 setPendingMethodSelections(new Set());
                 setPendingInputValue("");
                 setPendingInputValueTo("");
+                // Store the trigger rect for sub-menu positioning
+                const triggerRect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                (e.currentTarget as HTMLButtonElement).dataset.rectTop = String(triggerRect.top);
+                (e.currentTarget as HTMLButtonElement).dataset.rectRight = String(triggerRect.right);
+                (e.currentTarget as HTMLButtonElement).dataset.rectLeft = String(triggerRect.left);
               }}
             >
               <span>{ff.label}</span>
               <span className="rb-arrow">&#9656;</span>
             </button>
-            {activeFieldMenu === ff.value && (
-              <div className="rb-submenu">
-                {FIELD_OPERATORS[ff.value].map((op) => (
-                  <div key={op.value} className="rb-submenu-wrap">
-                    <button
-                      type="button"
-                      className="rb-filter-dropdown-item"
-                      onMouseEnter={() => {
-                        setActiveOperatorMenu(op.value);
-                        setPendingMethodSelections(new Set());
-                        setPendingInputValue("");
-                        setPendingInputValueTo("");
-                      }}
-                      onClick={() => {
-                        if (ff.value !== "method" && ff.value !== "time") {
+            {activeFieldMenu === ff.value && (() => {
+              // Position sub-menu using the dropdown position
+              const submenuWidth = 220;
+              const parentRight = dropdownPosition.left + 220; // approximate parent right
+              const flipped = parentRight + submenuWidth > window.innerWidth;
+              const subLeft = flipped
+                ? dropdownPosition.left - submenuWidth
+                : parentRight;
+              return (
+                <div
+                  className="rb-submenu"
+                  style={{
+                    position: "fixed",
+                    top: dropdownPosition.top,
+                    left: Math.max(0, subLeft),
+                  }}
+                >
+                  {FIELD_OPERATORS[ff.value].map((op) => (
+                    <div key={op.value} className="rb-submenu-wrap">
+                      <button
+                        type="button"
+                        className="rb-filter-dropdown-item"
+                        onMouseEnter={() => {
                           setActiveOperatorMenu(op.value);
-                        }
-                      }}
-                    >
-                      <span>{op.label}</span>
-                      <span className="rb-arrow">&#9656;</span>
-                    </button>
-                    {activeOperatorMenu === op.value && renderOperatorInput(ff.value, op.value)}
-                  </div>
-                ))}
-              </div>
-            )}
+                          setPendingMethodSelections(new Set());
+                          setPendingInputValue("");
+                          setPendingInputValueTo("");
+                        }}
+                        onClick={() => {
+                          if (ff.value !== "method" && ff.value !== "time") {
+                            setActiveOperatorMenu(op.value);
+                          }
+                        }}
+                      >
+                        <span>{op.label}</span>
+                        <span className="rb-arrow">&#9656;</span>
+                      </button>
+                      {activeOperatorMenu === op.value && (() => {
+                        // Position operator input sub-menu
+                        const opSubmenuWidth = 220;
+                        const parentSubRight = subLeft + submenuWidth;
+                        const opFlipped = parentSubRight + opSubmenuWidth > window.innerWidth;
+                        const opLeft = opFlipped
+                          ? subLeft - opSubmenuWidth
+                          : parentSubRight;
+                        return (
+                          <div style={{ position: "fixed", top: dropdownPosition.top, left: Math.max(0, opLeft), zIndex: 220 }}>
+                            {renderOperatorInput(ff.value, op.value)}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         ))}
       </div>
@@ -1696,45 +1954,10 @@ export default function RequestBinPage(): React.ReactNode {
           </button>
         </div>
 
-        {/* Filter chips + Filter button */}
+        {/* Filter tree + dropdown */}
         <div className="rb-filter-area">
-          {renderFilterChips()}
-          {allFilters.length > 0 && (
-            <button
-              type="button"
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "#cf222e",
-                fontSize: 12,
-                fontFamily: "inherit",
-                padding: "0 4px",
-              }}
-              onClick={clearAllFilters}
-            >
-              Clear all
-            </button>
-          )}
-          <div
-            className="rb-filter-dropdown-wrap"
-            ref={filterDropdownRef}
-            style={{ marginLeft: allFilters.length > 0 ? "auto" : 0 }}
-          >
-            <button
-              type="button"
-              className="rb-filter-btn"
-              onClick={() => {
-                setFilterDropdownOpen((prev) => !prev);
-                setActiveFieldMenu(null);
-                setActiveOperatorMenu(null);
-                setAddingToGroupId(null);
-              }}
-            >
-              &#8862; Filter
-            </button>
-            {renderFilterDropdown()}
-          </div>
+          {renderFilterTree()}
+          {renderFilterDropdown()}
         </div>
 
         {/* Search bar */}
