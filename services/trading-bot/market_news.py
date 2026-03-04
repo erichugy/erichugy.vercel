@@ -1,10 +1,13 @@
 import json
+import logging
 
 import requests
 from bs4 import BeautifulSoup
 
 from article import Article
 from config import ALPACA_API_KEY, ALPACA_API_SECRET
+
+logger = logging.getLogger(__name__)
 
 
 def get_articles(api_key=None, api_secret=None, symbol: str = "AAPL"):
@@ -53,7 +56,7 @@ def get_articles(api_key=None, api_secret=None, symbol: str = "AAPL"):
 
     if response.status_code == 200:
         data = json.loads(response.text)
-        article_objs = Article.read_json_to_articles(data["news"])
+        article_objs = Article.read_json_to_articles(data.get("news", []))
         return article_objs
     else:
         raise RuntimeError(
@@ -71,20 +74,30 @@ def get_page_text(url):
     Returns:
         Tuple of (title, list of text sections).
     """
+    headers = {"User-Agent": "Mozilla/5.0 (compatible; SentimentBot/1.0)"}
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, timeout=10, headers=headers)
     except requests.exceptions.RequestException as e:
-        return ("", [f"Failed to fetch article: {e}"])
+        logger.warning("Failed to fetch article from %s: %s", url, e)
+        return ("", [])
 
-    soup = BeautifulSoup(response.content, "html.parser")
+    if not response.ok:
+        logger.warning("Non-2xx response (%d) from %s", response.status_code, url)
+        return ("", [])
 
-    title_tag = soup.find("title")
-    title = title_tag.get_text() if title_tag else ""
+    try:
+        soup = BeautifulSoup(response.content, "html.parser")
 
-    text = soup.get_text("\n", strip=True)
-    new_text = []
-    for section in text.split("\n"):
-        if len(section) > 8:
-            new_text.append(section)
+        title_tag = soup.find("title")
+        title = title_tag.get_text() if title_tag else ""
 
-    return (title, new_text)
+        text = soup.get_text("\n", strip=True)
+        new_text = []
+        for section in text.split("\n"):
+            if len(section) > 8:
+                new_text.append(section)
+
+        return (title, new_text)
+    except Exception:
+        logger.warning("Failed to parse page content from %s", url, exc_info=True)
+        return ("", [])

@@ -1,23 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import { z } from "zod";
 
-interface Article {
-  title: string;
-  url: string;
-  sentiment: string;
-  sentiment_score: number;
-}
+const articleSchema = z.object({
+  title: z.string(),
+  url: z.string(),
+  sentiment: z.string(),
+  sentiment_score: z.number(),
+});
 
-interface AnalysisResult {
-  ticker: string;
-  recommendation: string;
-  confidence: number;
-  sentiment_score: number;
-  articles_analyzed: number;
-  articles: Article[];
-}
+const analysisResultSchema = z.object({
+  ticker: z.string(),
+  recommendation: z.string(),
+  confidence: z.number(),
+  sentiment_score: z.number(),
+  articles_analyzed: z.number(),
+  articles: z.array(articleSchema),
+});
+
+type Article = z.infer<typeof articleSchema>;
+type AnalysisResult = z.infer<typeof analysisResultSchema>;
 
 const GATEWAY_URL =
   process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8080";
@@ -49,6 +53,15 @@ export default function TradingBotPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [articlesExpanded, setArticlesExpanded] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,10 +71,17 @@ export default function TradingBotPage() {
       return;
     }
 
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoading(true);
     setError(null);
     setResult(null);
     setArticlesExpanded(false);
+
+    // NOTE: capture ref so we can detect if a newer submission superseded this one
+    const isStale = () => !isMountedRef.current || abortControllerRef.current !== controller;
 
     try {
       const response = await fetch(
@@ -70,8 +90,11 @@ export default function TradingBotPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ticker: trimmed, fast: false }),
+          signal: controller.signal,
         },
       );
+
+      if (isStale()) return;
 
       if (!response.ok) {
         const body = await response.json().catch(() => null);
@@ -80,22 +103,42 @@ export default function TradingBotPage() {
         );
       }
 
-      const data = (await response.json()) as AnalysisResult;
-      setResult(data);
+      let raw: unknown;
+      try {
+        raw = await response.json();
+      } catch {
+        if (!isStale()) {
+          setError("Received an unexpected response format from the server.");
+        }
+        return;
+      }
+      const data = analysisResultSchema.parse(raw);
+      if (!isStale()) {
+        setResult(data);
+      }
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : "An unexpected error occurred. Please try again.",
-      );
+      if (submitError instanceof Error && submitError.name === "AbortError") {
+        return;
+      }
+      if (isStale()) return;
+      if (submitError instanceof z.ZodError) {
+        setError("Received an unexpected response format from the server.");
+      } else {
+        setError(
+          submitError instanceof Error
+            ? submitError.message
+            : "An unexpected error occurred. Please try again.",
+        );
+      }
     } finally {
-      setIsLoading(false);
+      if (!isStale()) {
+        setIsLoading(false);
+      }
     }
   }
 
   return (
     <main className="bg-page">
-      {/* Hero Section */}
       <section className="px-6 py-20 md:py-28 bg-page">
         <div className="max-w-7xl mx-auto">
           <div className="max-w-3xl">
@@ -118,7 +161,6 @@ export default function TradingBotPage() {
         </div>
       </section>
 
-      {/* Interactive Demo Section */}
       <section className="px-6 py-12 md:py-16 bg-page-alt">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-heading mb-8">
@@ -174,14 +216,12 @@ export default function TradingBotPage() {
               </div>
             </form>
 
-            {/* Error State */}
             {error ? (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-red-700 dark:text-red-300">
                 {error}
               </div>
             ) : null}
 
-            {/* Loading State */}
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-4">
                 <svg
@@ -206,13 +246,18 @@ export default function TradingBotPage() {
                 <p className="text-muted font-mono text-sm">
                   Fetching news and analyzing sentiment...
                 </p>
+                <button
+                  type="button"
+                  onClick={() => abortControllerRef.current?.abort()}
+                  className="text-sm text-muted hover:text-heading transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             ) : null}
 
-            {/* Results */}
             {result ? (
               <div className="space-y-6">
-                {/* Recommendation Badge */}
                 <div className="flex flex-col items-center py-6">
                   <p className="text-sm font-mono uppercase tracking-[0.14em] text-muted mb-3">
                     Recommendation for {result.ticker}
@@ -224,9 +269,7 @@ export default function TradingBotPage() {
                   </span>
                 </div>
 
-                {/* Metrics Grid */}
                 <div className="grid sm:grid-cols-3 gap-4">
-                  {/* Confidence */}
                   <div className="bg-page border border-border rounded-xl p-4">
                     <p className="text-sm text-muted mb-2">Confidence</p>
                     <p className="text-2xl font-bold text-heading mb-2">
@@ -240,7 +283,6 @@ export default function TradingBotPage() {
                     </div>
                   </div>
 
-                  {/* Sentiment Score */}
                   <div className="bg-page border border-border rounded-xl p-4">
                     <p className="text-sm text-muted mb-2">Sentiment Score</p>
                     <p className="text-2xl font-bold text-heading">
@@ -248,7 +290,6 @@ export default function TradingBotPage() {
                     </p>
                   </div>
 
-                  {/* Articles Analyzed */}
                   <div className="bg-page border border-border rounded-xl p-4">
                     <p className="text-sm text-muted mb-2">Articles Analyzed</p>
                     <p className="text-2xl font-bold text-heading">
@@ -257,7 +298,6 @@ export default function TradingBotPage() {
                   </div>
                 </div>
 
-                {/* Articles List */}
                 {result.articles.length > 0 ? (
                   <div className="bg-page border border-border rounded-xl overflow-hidden">
                     <button
@@ -320,7 +360,6 @@ export default function TradingBotPage() {
         </div>
       </section>
 
-      {/* Tech Stack Section */}
       <section className="px-6 py-12 md:py-16 bg-page">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-heading mb-8">
@@ -340,7 +379,6 @@ export default function TradingBotPage() {
         </div>
       </section>
 
-      {/* Back Link */}
       <section className="px-6 py-12 bg-page">
         <div className="max-w-7xl mx-auto">
           <Link

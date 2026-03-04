@@ -1,10 +1,17 @@
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class Article:
     def __init__(self, url, date, headline, symbol):
         self.url = url
-        self.date = datetime.strptime(date, r"%Y-%m-%dT%H:%M:%SZ")
+        try:
+            self.date = datetime.strptime(date, r"%Y-%m-%dT%H:%M:%SZ")
+        except (ValueError, TypeError) as e:
+            logger.warning("Failed to parse date '%s': %s — using current time", date, e)
+            self.date = datetime.utcnow()
         self.headline = headline
         self.symbol = symbol
         self.content = ()
@@ -21,13 +28,17 @@ class Article:
     @classmethod
     def read_json_to_articles(cls, json_data) -> list:
         articles = []
-        for item in json_data:
-            articles.append(
-                Article(
-                    item["url"],
-                    item["created_at"],
-                    item["headline"],
-                    item["symbols"],
+        for i, item in enumerate(json_data):
+            try:
+                articles.append(
+                    Article(
+                        item["url"],
+                        item["created_at"],
+                        item["headline"],
+                        item["symbols"],
+                    )
                 )
-            )
+            except (KeyError, ValueError, TypeError) as e:
+                # NOTE: skip malformed articles rather than aborting the entire batch
+                logger.warning("Skipping article at index %d: %s", i, e)
         return articles

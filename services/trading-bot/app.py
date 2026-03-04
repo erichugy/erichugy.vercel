@@ -3,7 +3,8 @@ import re
 from flask import Flask, jsonify, request
 
 from analysis import analyze_text_list
-from config import COHERE_API_KEY
+from config import COHERE_API_KEY, MAX_ARTICLES
+from model import sentiment as cohere_sentiment
 from market_news import get_articles, get_page_text
 from article import Article
 from typing import List
@@ -30,12 +31,16 @@ def analyse_news(article_objs: List[Article], fast: bool = False):
             title = article.headline
         else:
             title, text_lines = get_page_text(article.url)
-            text_lines.append(title)
+            # NOTE: fall back to headline if scrape returned no usable content
+            text_lines = [line for line in text_lines if line.strip()]
+            if not text_lines:
+                text_lines = [article.headline]
+            if not title:
+                title = article.headline
 
         # Use Cohere ML model if API key is available, otherwise fall back to word-based
         if COHERE_API_KEY:
-            from model import sentiment
-            score = sentiment(text_lines)
+            score = cohere_sentiment(text_lines)
         else:
             score = analyze_text_list(text_lines)
         total_score += score
@@ -83,9 +88,13 @@ def get_stock_prediction(ticker: str, fast: bool = False, threshold: float = 0.1
             "articles": [],
         }
 
+    # NOTE: cap articles to bound total response time from web scraping
+    article_objs = article_objs[:MAX_ARTICLES]
+
     sentiment_score, articles_detail = analyse_news(article_objs, fast=fast)
 
-    confidence = min(abs(sentiment_score) / max(threshold, 0.01), 1.0)
+    # NOTE: scale so threshold maps to ~50% confidence, giving a more honest signal
+    confidence = min(abs(sentiment_score) / (2 * max(threshold, 0.01)), 1.0)
 
     if sentiment_score > threshold:
         recommendation = "BUY"

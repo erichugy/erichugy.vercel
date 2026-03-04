@@ -1,6 +1,25 @@
+import threading
+
 import cohere
 from config import COHERE_API_KEY
 from typing import List
+
+_client_lock = threading.Lock()
+_client: cohere.Client | None = None
+
+
+def _get_client() -> cohere.Client:
+    global _client
+    if _client is None:
+        with _client_lock:
+            if _client is None:
+                if not COHERE_API_KEY:
+                    raise RuntimeError(
+                        "COHERE_API_KEY environment variable is not set. "
+                        "Set COHERE_API_KEY to a valid Cohere API key to enable ML-based sentiment classification."
+                    )
+                _client = cohere.Client(COHERE_API_KEY)
+    return _client
 
 
 def sentiment(input_texts: List[str]):
@@ -8,13 +27,7 @@ def sentiment(input_texts: List[str]):
 
     Returns a recommendation score between -1 and 1.
     """
-    if not COHERE_API_KEY:
-        raise RuntimeError(
-            "COHERE_API_KEY environment variable is not set. "
-            "Please set it before using the ML sentiment model."
-        )
-
-    co = cohere.Client(COHERE_API_KEY)
+    co = _get_client()
 
     recommendation_score = 0.0
     batch_size = 95
