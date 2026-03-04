@@ -12,17 +12,37 @@ import type { CapturedRequest } from "@/lib/requestBinStore";
 
 // --- Types ---
 
-type RouteFilter = {
+type FilterOperator =
+  | "is"
+  | "is_any_of"
+  | "is_none_of"
+  | "contains"
+  | "not_contains"
+  | "starts_with"
+  | "equals"
+  | "after"
+  | "before"
+  | "between";
+
+type FilterField = "method" | "path" | "time" | "body" | "headers";
+
+type SingleFilter = {
+  id: string;
+  field: FilterField;
+  operator: FilterOperator;
   value: string;
-  mode: "contains" | "exact" | "starts-with";
+  values?: string[];
+  valueTo?: string;
+};
+
+type FilterGroup = {
+  id: string;
+  logic: "AND" | "OR";
+  filters: SingleFilter[];
 };
 
 type FilterState = {
-  methods: Set<string>;
-  timeFrom: string;
-  timeTo: string;
-  routes: RouteFilter[];
-  logic: "AND" | "OR";
+  groups: FilterGroup[];
 };
 
 type SearchState = {
@@ -42,13 +62,7 @@ type SavedView = {
   id: string;
   name: string;
   createdAt: string;
-  filter: {
-    methods: string[];
-    timeFrom: string;
-    timeTo: string;
-    routes: RouteFilter[];
-    logic: "AND" | "OR";
-  };
+  filterGroups: FilterGroup[];
   search: SearchState;
 };
 
@@ -68,11 +82,43 @@ const DEFAULT_PANEL_WIDTH = 340;
 const MIN_PANEL_WIDTH = 200;
 const MAX_PANEL_WIDTH = 800;
 const MAX_VIEWS = 50;
-const MAX_ROUTE_FILTERS = 20;
 const MAX_VIEW_NAME_LENGTH = 100;
-const MAX_ROUTE_VALUE_LENGTH = 500;
 const MAX_SEARCH_QUERY_LENGTH = 1000;
-const ROUTE_MODES = ["contains", "exact", "starts-with"] as const;
+
+const FIELD_OPERATORS: Record<FilterField, { value: FilterOperator; label: string }[]> = {
+  method: [
+    { value: "is", label: "is" },
+    { value: "is_any_of", label: "is any of" },
+    { value: "is_none_of", label: "is none of" },
+  ],
+  path: [
+    { value: "contains", label: "contains" },
+    { value: "not_contains", label: "does not contain" },
+    { value: "starts_with", label: "starts with" },
+    { value: "equals", label: "equals" },
+  ],
+  time: [
+    { value: "after", label: "after" },
+    { value: "before", label: "before" },
+    { value: "between", label: "between" },
+  ],
+  body: [
+    { value: "contains", label: "contains" },
+    { value: "not_contains", label: "does not contain" },
+  ],
+  headers: [
+    { value: "contains", label: "contains" },
+    { value: "not_contains", label: "does not contain" },
+  ],
+};
+
+const FILTER_FIELDS: { value: FilterField; label: string }[] = [
+  { value: "method", label: "Method" },
+  { value: "path", label: "Path" },
+  { value: "time", label: "Time" },
+  { value: "body", label: "Body" },
+  { value: "headers", label: "Headers" },
+];
 
 // --- Helpers ---
 
@@ -114,18 +160,12 @@ function formatTime(ts: string): string {
   return new Date(ts).toLocaleTimeString();
 }
 
-function isRouteMode(val: string): val is RouteFilter["mode"] {
-  return ROUTE_MODES.some((m) => m === val);
+function generateFilterId(): string {
+  return Math.random().toString(36).substring(2, 10);
 }
 
-function createDefaultFilter(): FilterState {
-  return {
-    methods: new Set<string>(),
-    timeFrom: "",
-    timeTo: "",
-    routes: [],
-    logic: "AND",
-  };
+function createDefaultFilterState(): FilterState {
+  return { groups: [] };
 }
 
 function createDefaultSearch(): SearchState {
@@ -137,37 +177,90 @@ function createDefaultSearch(): SearchState {
   };
 }
 
-function matchesFilter(req: CapturedRequest, filter: FilterState): boolean {
-  const methodMatch =
-    filter.methods.size === 0 || filter.methods.has(req.method);
+function operatorLabel(op: FilterOperator): string {
+  const labels: Record<FilterOperator, string> = {
+    is: "is",
+    is_any_of: "is any of",
+    is_none_of: "is none of",
+    contains: "contains",
+    not_contains: "does not contain",
+    starts_with: "starts with",
+    equals: "equals",
+    after: "after",
+    before: "before",
+    between: "between",
+  };
+  return labels[op];
+}
 
-  const timeMatch = (() => {
-    if (!filter.timeFrom && !filter.timeTo) return true;
-    const ts = new Date(req.timestamp).getTime();
-    if (filter.timeFrom && ts < new Date(filter.timeFrom).getTime())
-      return false;
-    if (filter.timeTo && ts > new Date(filter.timeTo).getTime()) return false;
-    return true;
-  })();
+function filterDisplayValue(f: SingleFilter): string {
+  if (f.operator === "is_any_of" || f.operator === "is_none_of") {
+    return f.values?.join(", ") ?? "";
+  }
+  if (f.operator === "between") {
+    return `${f.value} - ${f.valueTo ?? ""}`;
+  }
+  return f.value;
+}
 
-  const routeMatch = (() => {
-    if (filter.routes.length === 0) return true;
-    return filter.routes.some((rf) => {
-      const trimmed = rf.value.trim();
-      if (!trimmed) return true;
-      switch (rf.mode) {
-        case "contains":
-          return req.path.includes(trimmed);
-        case "exact":
-          return req.path === trimmed;
-        case "starts-with":
-          return req.path.startsWith(trimmed);
+function matchesSingleFilter(req: CapturedRequest, f: SingleFilter): boolean {
+  switch (f.field) {
+    case "method": {
+      if (f.operator === "is") return req.method === f.value;
+      if (f.operator === "is_any_of") return f.values?.includes(req.method) ?? false;
+      if (f.operator === "is_none_of") return !(f.values?.includes(req.method) ?? false);
+      return true;
+    }
+    case "path": {
+      const path = req.path.toLowerCase();
+      const val = f.value.toLowerCase();
+      if (f.operator === "contains") return path.includes(val);
+      if (f.operator === "not_contains") return !path.includes(val);
+      if (f.operator === "starts_with") return path.startsWith(val);
+      if (f.operator === "equals") return req.path === f.value;
+      return true;
+    }
+    case "time": {
+      const ts = new Date(req.timestamp).getTime();
+      if (f.operator === "after") return ts > new Date(f.value).getTime();
+      if (f.operator === "before") return ts < new Date(f.value).getTime();
+      if (f.operator === "between") {
+        const from = new Date(f.value).getTime();
+        const to = new Date(f.valueTo ?? "").getTime();
+        return ts >= from && ts <= to;
       }
-    });
-  })();
+      return true;
+    }
+    case "body": {
+      const bodyStr = typeof req.body === "string" ? req.body : JSON.stringify(req.body ?? "");
+      const lower = bodyStr.toLowerCase();
+      const val = f.value.toLowerCase();
+      if (f.operator === "contains") return lower.includes(val);
+      if (f.operator === "not_contains") return !lower.includes(val);
+      return true;
+    }
+    case "headers": {
+      const headersStr = JSON.stringify(req.headers).toLowerCase();
+      const val = f.value.toLowerCase();
+      if (f.operator === "contains") return headersStr.includes(val);
+      if (f.operator === "not_contains") return !headersStr.includes(val);
+      return true;
+    }
+  }
+}
 
-  if (filter.logic === "AND") return methodMatch && timeMatch && routeMatch;
-  return methodMatch || timeMatch || routeMatch;
+function matchesFilterState(req: CapturedRequest, state: FilterState): boolean {
+  if (state.groups.length === 0) return true;
+
+  // All groups joined by AND
+  return state.groups.every((group) => {
+    if (group.filters.length === 0) return true;
+    if (group.logic === "AND") {
+      return group.filters.every((f) => matchesSingleFilter(req, f));
+    }
+    // OR
+    return group.filters.some((f) => matchesSingleFilter(req, f));
+  });
 }
 
 function matchesSearch(req: CapturedRequest, search: SearchState): boolean {
@@ -196,20 +289,15 @@ function matchesSearch(req: CapturedRequest, search: SearchState): boolean {
     }
     return pattern.test(searchable);
   } catch {
-    // invalid regex — treat as no match rather than crashing
     return false;
   }
 }
 
-function countActiveFilters(filter: FilterState): number {
-  let count = 0;
-  if (filter.methods.size > 0) count++;
-  if (filter.timeFrom || filter.timeTo) count++;
-  if (filter.routes.some((r) => r.value.trim())) count++;
-  return count;
+function getAllFilters(state: FilterState): SingleFilter[] {
+  return state.groups.flatMap((g) => g.filters);
 }
 
-// --- localStorage helpers with try/catch for private browsing ---
+// --- localStorage helpers ---
 
 function loadFromStorage(key: string): unknown {
   try {
@@ -225,7 +313,7 @@ function saveToStorage(key: string, value: unknown): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // localStorage may be full or unavailable in private browsing
+    // localStorage may be full or unavailable
   }
 }
 
@@ -243,13 +331,12 @@ function isValidSavedView(v: unknown): v is SavedView {
   return (
     hasStringProp(v, "id") &&
     hasStringProp(v, "name") &&
-    hasObjectProp(v, "filter") &&
-    hasObjectProp(v, "search")
+    (hasObjectProp(v, "search") || true)
   );
 }
 
 function loadViews(): SavedView[] {
-  const raw = loadFromStorage("requestbin-views");
+  const raw = loadFromStorage("requestbin-views-v2");
   if (!Array.isArray(raw)) return [];
   return raw.filter(isValidSavedView).slice(0, MAX_VIEWS);
 }
@@ -327,6 +414,11 @@ const styles = `
     background: #f6f8fa;
   }
   .rb-toolbar h1 { color: #0969da; font-size: 18px; margin: 0; }
+  .rb-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
   .rb-toolbar-actions { display: flex; gap: 16px; }
   .rb-toolbar-actions button {
     color: #0969da;
@@ -433,119 +525,258 @@ const styles = `
     font-size: 14px;
   }
 
-  /* Filter bar */
-  .rb-filter-bar {
-    padding: 8px 20px;
+  /* View tabs - Linear style */
+  .rb-view-tabs {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 20px;
     border-bottom: 1px solid #d0d7de;
-    background: #f6f8fa;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    font-size: 12px;
-  }
-  .rb-filter-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .rb-filter-group label {
-    color: #656d76;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  .rb-method-toggle {
-    padding: 2px 8px;
-    border-radius: 3px;
-    border: 1px solid #d0d7de;
     background: #ffffff;
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 600;
+    overflow-x: auto;
+  }
+  .rb-view-tab {
+    padding: 8px 12px;
+    font-size: 13px;
     color: #656d76;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
     transition: all 0.1s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
     font-family: inherit;
   }
-  .rb-method-toggle.rb-active { color: #fff; border-color: transparent; }
-  .rb-method-toggle.rb-active-get { background: #1a7f37; }
-  .rb-method-toggle.rb-active-post { background: #0969da; }
-  .rb-method-toggle.rb-active-put { background: #9a6700; }
-  .rb-method-toggle.rb-active-delete { background: #cf222e; }
-  .rb-method-toggle.rb-active-patch { background: #8250df; }
-  .rb-method-toggle.rb-active-head { background: #656d76; }
-  .rb-method-toggle.rb-active-options { background: #656d76; }
-  .rb-filter-input {
-    padding: 3px 8px;
-    border: 1px solid #d0d7de;
-    border-radius: 4px;
-    font-size: 12px;
-    font-family: inherit;
-    background: #ffffff;
-  }
-  .rb-filter-select {
-    padding: 3px 6px;
-    border: 1px solid #d0d7de;
-    border-radius: 4px;
-    font-size: 12px;
-    background: #ffffff;
-  }
-  .rb-logic-toggle {
-    padding: 2px 8px;
-    border: 1px solid #d0d7de;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 11px;
+  .rb-view-tab:hover { color: #24292f; }
+  .rb-view-tab.rb-active {
+    color: #24292f;
     font-weight: 600;
-    background: #ffffff;
+    border-bottom-color: #0969da;
+  }
+  .rb-view-add {
+    padding: 8px;
+    color: #656d76;
+    cursor: pointer;
+    font-size: 16px;
+    background: none;
+    border: none;
     font-family: inherit;
-    color: #656d76;
   }
-  .rb-logic-toggle.rb-active { background: #0969da; color: #fff; border-color: #0969da; }
-  .rb-filter-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: auto;
-    color: #656d76;
-    font-size: 12px;
+  .rb-view-add:hover { color: #24292f; }
+  .rb-view-tab-ctx {
+    position: relative;
+    display: inline-flex;
   }
-  .rb-filter-status button {
-    color: #cf222e;
+  .rb-tab-context-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #ffffff;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(140,149,159,0.2);
+    z-index: 100;
+    min-width: 140px;
+    padding: 4px 0;
+  }
+  .rb-tab-context-menu button {
+    display: block;
+    width: 100%;
+    padding: 6px 12px;
+    text-align: left;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
     font-family: inherit;
-    padding: 0;
+    color: #24292f;
   }
-  .rb-filter-status button:hover { text-decoration: underline; }
-  .rb-route-row {
+  .rb-tab-context-menu button:hover { background: #f6f8fa; }
+  .rb-tab-context-menu button.rb-danger { color: #cf222e; }
+
+  /* Filter area */
+  .rb-filter-area {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-bottom: 1px solid #d0d7de;
+    background: #ffffff;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  .rb-filter-btn {
     display: flex;
     align-items: center;
     gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    color: #656d76;
+    transition: all 0.1s;
+    position: relative;
   }
-  .rb-route-remove {
+  .rb-filter-btn:hover { border-color: #0969da; color: #0969da; }
+
+  /* Filter chip */
+  .rb-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #ddf4ff;
+    color: #0969da;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .rb-chip-remove {
     background: none;
     border: none;
     cursor: pointer;
-    color: #cf222e;
+    color: #0969da;
     font-size: 14px;
-    padding: 0 4px;
+    padding: 0 2px;
+    line-height: 1;
     font-family: inherit;
+  }
+  .rb-chip-remove:hover { color: #cf222e; }
+  .rb-chip-logic {
+    color: #656d76;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 2px;
+  }
+  .rb-group-bracket {
+    color: #656d76;
+    font-size: 16px;
+    font-weight: 300;
     line-height: 1;
   }
-  .rb-route-add {
+  .rb-group-logic-toggle {
     background: none;
     border: 1px solid #d0d7de;
     border-radius: 4px;
     cursor: pointer;
-    color: #0969da;
     font-size: 11px;
-    padding: 2px 8px;
+    font-weight: 600;
+    padding: 1px 6px;
+    color: #656d76;
     font-family: inherit;
   }
-  .rb-route-add:hover { background: #f6f8fa; }
+  .rb-group-logic-toggle:hover { border-color: #0969da; color: #0969da; }
+
+  /* Filter dropdown */
+  .rb-filter-dropdown-wrap { position: relative; display: inline-flex; }
+  .rb-filter-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: #ffffff;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(140,149,159,0.2);
+    z-index: 200;
+    min-width: 220px;
+    padding: 4px 0;
+  }
+  .rb-filter-dropdown-title {
+    padding: 8px 12px 4px;
+    font-size: 11px;
+    color: #656d76;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .rb-filter-dropdown-divider {
+    height: 1px;
+    background: #d0d7de;
+    margin: 4px 0;
+  }
+  .rb-filter-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    color: #24292f;
+  }
+  .rb-filter-dropdown-item:hover { background: #f6f8fa; }
+  .rb-filter-dropdown-item .rb-arrow { color: #656d76; }
+
+  /* Sub-menu */
+  .rb-submenu-wrap { position: relative; }
+  .rb-submenu {
+    position: absolute;
+    top: -4px;
+    left: 100%;
+    background: #ffffff;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(140,149,159,0.2);
+    z-index: 210;
+    min-width: 220px;
+    padding: 4px 0;
+  }
+  .rb-submenu-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+  }
+  .rb-submenu-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid #d0d7de;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+  }
+  .rb-submenu-input:focus { border-color: #0969da; }
+  .rb-submenu-apply {
+    padding: 4px 10px;
+    background: #0969da;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  .rb-submenu-apply:hover { background: #0860c4; }
+  .rb-method-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    color: #24292f;
+  }
+  .rb-method-option:hover { background: #f6f8fa; }
+  .rb-method-checkbox {
+    width: 14px;
+    height: 14px;
+    accent-color: #0969da;
+  }
 
   /* Search bar */
   .rb-search-bar {
@@ -579,44 +810,6 @@ const styles = `
   }
   .rb-search-toggle.rb-active { background: #0969da; color: #fff; border-color: #0969da; }
   .rb-search-count { color: #656d76; font-size: 12px; white-space: nowrap; }
-
-  /* Views bar */
-  .rb-views-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 20px;
-    border-bottom: 1px solid #d0d7de;
-    background: #f6f8fa;
-    overflow-x: auto;
-  }
-  .rb-view-tab {
-    padding: 3px 10px;
-    border-radius: 4px;
-    border: 1px solid #d0d7de;
-    background: #ffffff;
-    cursor: pointer;
-    font-size: 12px;
-    white-space: nowrap;
-    transition: all 0.1s;
-    font-family: inherit;
-  }
-  .rb-view-tab.rb-active { background: #0969da; color: #fff; border-color: #0969da; }
-  .rb-view-actions {
-    display: flex;
-    gap: 8px;
-    margin-left: auto;
-  }
-  .rb-view-actions button {
-    color: #0969da;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 12px;
-    font-family: inherit;
-    padding: 0;
-  }
-  .rb-view-actions button:hover { text-decoration: underline; }
 
   /* Collapsible sections */
   .rb-collapse-toggle {
@@ -670,15 +863,11 @@ export default function RequestBinPage(): React.ReactNode {
   const [requests, setRequests] = useState<CapturedRequest[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Filter state
-  const [filterState, setFilterState] = useState<FilterState>(
-    createDefaultFilter,
-  );
+  // Filter state - new group-based model
+  const [filterState, setFilterState] = useState<FilterState>(createDefaultFilterState);
 
   // Search state
-  const [searchState, setSearchState] = useState<SearchState>(
-    createDefaultSearch,
-  );
+  const [searchState, setSearchState] = useState<SearchState>(createDefaultSearch);
 
   // Collapse state
   const [collapsed, setCollapsed] = useState<CollapsedSections>({
@@ -691,21 +880,31 @@ export default function RequestBinPage(): React.ReactNode {
   const [savedViews, setSavedViews] = useState<SavedView[]>([]);
   const [activeViewId, setActiveViewId] = useState("default");
 
+  // Filter dropdown state
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [activeFieldMenu, setActiveFieldMenu] = useState<FilterField | null>(null);
+  const [activeOperatorMenu, setActiveOperatorMenu] = useState<FilterOperator | null>(null);
+  const [pendingMethodSelections, setPendingMethodSelections] = useState<Set<string>>(new Set());
+  const [pendingInputValue, setPendingInputValue] = useState("");
+  const [pendingInputValueTo, setPendingInputValueTo] = useState("");
+  const [addingToGroupId, setAddingToGroupId] = useState<string | null>(null);
+
+  // Tab context menu
+  const [tabContextMenuId, setTabContextMenuId] = useState<string | null>(null);
+
   // Resizable panel
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
   const panelWidthRef = useRef(DEFAULT_PANEL_WIDTH);
   const isDragging = useRef(false);
   const [isDraggingState, setIsDraggingState] = useState(false);
 
-  // Stale-fetch guard
+  // Refs
   const isMountedRef = useRef(true);
   const fetchIdRef = useRef(0);
-
-  // Double-submit guard for clear
   const isClearingRef = useRef(false);
-
-  // Hidden file input ref for import
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const tabContextMenuRef = useRef<HTMLDivElement>(null);
 
   // Load persisted state on mount
   useEffect(() => {
@@ -716,27 +915,18 @@ export default function RequestBinPage(): React.ReactNode {
     const views = loadViews();
     setSavedViews(views);
 
-    const activeId = loadFromStorage("requestbin-active-view") || "default";
+    const activeId = loadFromStorage("requestbin-active-view-v2");
     if (typeof activeId === "string") {
       setActiveViewId(activeId);
-      // Restore view state if not default
       if (activeId !== "default") {
         const view = views.find((v) => v.id === activeId);
         if (view) {
-          setFilterState({
-            methods: new Set(view.filter.methods),
-            timeFrom: view.filter.timeFrom || "",
-            timeTo: view.filter.timeTo || "",
-            routes: Array.isArray(view.filter.routes)
-              ? view.filter.routes
-              : [],
-            logic: view.filter.logic === "OR" ? "OR" : "AND",
-          });
+          setFilterState({ groups: view.filterGroups ?? [] });
           setSearchState({
-            query: view.search.query || "",
-            isRegex: Boolean(view.search.isRegex),
-            caseSensitive: Boolean(view.search.caseSensitive),
-            wholeWord: Boolean(view.search.wholeWord),
+            query: view.search?.query ?? "",
+            isRegex: Boolean(view.search?.isRegex),
+            caseSensitive: Boolean(view.search?.caseSensitive),
+            wholeWord: Boolean(view.search?.wholeWord),
           });
         }
       }
@@ -752,7 +942,41 @@ export default function RequestBinPage(): React.ReactNode {
     panelWidthRef.current = panelWidth;
   }, [panelWidth]);
 
-  // Fetch requests with abort controller — returns controller for cleanup
+  // Close filter dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        filterDropdownRef.current &&
+        !filterDropdownRef.current.contains(e.target as Node)
+      ) {
+        setFilterDropdownOpen(false);
+        setActiveFieldMenu(null);
+        setActiveOperatorMenu(null);
+        setPendingMethodSelections(new Set());
+        setPendingInputValue("");
+        setPendingInputValueTo("");
+        setAddingToGroupId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Close tab context menu on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        tabContextMenuRef.current &&
+        !tabContextMenuRef.current.contains(e.target as Node)
+      ) {
+        setTabContextMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Fetch requests
   const fetchRequests = useCallback((): AbortController => {
     const thisId = ++fetchIdRef.current;
     const controller = new AbortController();
@@ -760,9 +984,7 @@ export default function RequestBinPage(): React.ReactNode {
 
     (async () => {
       try {
-        const res = await fetch("/api/requests", {
-          signal: controller.signal,
-        });
+        const res = await fetch("/api/requests", { signal: controller.signal });
         if (!res.ok) return;
         const raw: unknown = await res.json().catch(() => null);
         if (!Array.isArray(raw)) return;
@@ -771,7 +993,7 @@ export default function RequestBinPage(): React.ReactNode {
           setRequests(validated);
         }
       } catch {
-        // NOTE: network error or aborted — silently ignore
+        // network error or aborted
       } finally {
         clearTimeout(timeout);
       }
@@ -793,10 +1015,7 @@ export default function RequestBinPage(): React.ReactNode {
     const timeout = setTimeout(() => controller.abort(), 10_000);
 
     try {
-      await fetch("/api/requests", {
-        method: "DELETE",
-        signal: controller.signal,
-      });
+      await fetch("/api/requests", { method: "DELETE", signal: controller.signal });
       if (isMountedRef.current) {
         setRequests([]);
         setSelectedIndex(0);
@@ -809,14 +1028,14 @@ export default function RequestBinPage(): React.ReactNode {
     }
   }, []);
 
-  // Computed filtered + searched list
+  // Filtered + searched list
   const displayedRequests = useMemo(() => {
-    const filtered = requests.filter((r) => matchesFilter(r, filterState));
+    const filtered = requests.filter((r) => matchesFilterState(r, filterState));
     if (!searchState.query.trim()) return filtered;
     return filtered.filter((r) => matchesSearch(r, searchState));
   }, [requests, filterState, searchState]);
 
-  // Reset selectedIndex when filters/search change
+  // Reset selectedIndex on filter/search change
   useEffect(() => {
     setSelectedIndex(0);
   }, [filterState, searchState]);
@@ -825,59 +1044,132 @@ export default function RequestBinPage(): React.ReactNode {
 
   // --- Filter handlers ---
 
-  const toggleMethod = useCallback((method: string) => {
+  const addFilter = useCallback((groupId: string | null, field: FilterField, operator: FilterOperator, value: string, values?: string[], valueTo?: string) => {
+    const newFilter: SingleFilter = {
+      id: generateFilterId(),
+      field,
+      operator,
+      value,
+      values,
+      valueTo,
+    };
+
     setFilterState((prev) => {
-      const next = new Set(prev.methods);
-      if (next.has(method)) {
-        next.delete(method);
-      } else {
-        next.add(method);
+      if (groupId !== null) {
+        // Add to existing group
+        return {
+          groups: prev.groups.map((g) =>
+            g.id === groupId
+              ? { ...g, filters: [...g.filters, newFilter] }
+              : g
+          ),
+        };
       }
-      return { ...prev, methods: next };
-    });
-  }, []);
 
-  const clearFilters = useCallback(() => {
-    setFilterState(createDefaultFilter());
-    setSearchState(createDefaultSearch());
-  }, []);
+      // Add to first group, or create a new AND group
+      if (prev.groups.length === 0) {
+        return {
+          groups: [{
+            id: generateFilterId(),
+            logic: "AND",
+            filters: [newFilter],
+          }],
+        };
+      }
 
-  const addRouteFilter = useCallback(() => {
-    setFilterState((prev) => {
-      if (prev.routes.length >= MAX_ROUTE_FILTERS) return prev;
+      const first = prev.groups[0];
       return {
-        ...prev,
-        routes: [...prev.routes, { value: "", mode: "contains" }],
+        groups: [
+          { ...first, filters: [...first.filters, newFilter] },
+          ...prev.groups.slice(1),
+        ],
       };
     });
   }, []);
 
-  const updateRouteFilter = useCallback(
-    (index: number, updates: Partial<RouteFilter>) => {
-      setFilterState((prev) => {
-        const routes = prev.routes.map((r, i) => {
-          if (i !== index) return r;
-          const updated = { ...r, ...updates };
-          // enforce max length
-          if (updated.value.length > MAX_ROUTE_VALUE_LENGTH) {
-            updated.value = updated.value.slice(0, MAX_ROUTE_VALUE_LENGTH);
-          }
-          return updated;
-        });
-        return { ...prev, routes };
-      });
-    },
-    [],
-  );
+  const removeFilter = useCallback((filterId: string) => {
+    setFilterState((prev) => {
+      const groups = prev.groups
+        .map((g) => ({
+          ...g,
+          filters: g.filters.filter((f) => f.id !== filterId),
+        }))
+        .filter((g) => g.filters.length > 0);
+      return { groups };
+    });
+  }, []);
 
-  const removeRouteFilter = useCallback((index: number) => {
+  const addFilterGroup = useCallback(() => {
     setFilterState((prev) => ({
-      ...prev,
-      routes: prev.routes.filter((_, i) => i !== index),
+      groups: [
+        ...prev.groups,
+        {
+          id: generateFilterId(),
+          logic: "OR",
+          filters: [],
+        },
+      ],
     }));
   }, []);
 
-  // --- Views handlers ---
+  const toggleGroupLogic = useCallback((groupId: string) => {
+    setFilterState((prev) => ({
+      groups: prev.groups.map((g) =>
+        g.id === groupId
+          ? { ...g, logic: g.logic === "AND" ? "OR" : "AND" }
+          : g
+      ),
+    }));
+  }, []);
+
+  const clearAllFilters = useCallback(() => {
+    setFilterState(createDefaultFilterState());
+    setSearchState(createDefaultSearch());
+  }, []);
+
+  // --- Dropdown handlers ---
+
+  const handleApplyFilter = useCallback((field: FilterField, operator: FilterOperator) => {
+    if (field === "method") {
+      if (operator === "is") {
+        // Single method selected from inline click — value set via pendingInputValue
+        // But for method "is", we use a method picker
+        return;
+      }
+      if (operator === "is_any_of" || operator === "is_none_of") {
+        if (pendingMethodSelections.size > 0) {
+          addFilter(addingToGroupId, field, operator, "", [...pendingMethodSelections]);
+        }
+      }
+    } else if (field === "time" && operator === "between") {
+      if (pendingInputValue) {
+        addFilter(addingToGroupId, field, operator, pendingInputValue, undefined, pendingInputValueTo);
+      }
+    } else {
+      if (pendingInputValue) {
+        addFilter(addingToGroupId, field, operator, pendingInputValue);
+      }
+    }
+
+    // Close menus
+    setFilterDropdownOpen(false);
+    setActiveFieldMenu(null);
+    setActiveOperatorMenu(null);
+    setPendingMethodSelections(new Set());
+    setPendingInputValue("");
+    setPendingInputValueTo("");
+    setAddingToGroupId(null);
+  }, [pendingMethodSelections, pendingInputValue, pendingInputValueTo, addFilter, addingToGroupId]);
+
+  const handleMethodSingleSelect = useCallback((method: string) => {
+    addFilter(addingToGroupId, "method", "is", method);
+    setFilterDropdownOpen(false);
+    setActiveFieldMenu(null);
+    setActiveOperatorMenu(null);
+    setAddingToGroupId(null);
+  }, [addFilter, addingToGroupId]);
+
+  // --- View handlers ---
 
   const handleSaveView = useCallback(() => {
     const rawName = window.prompt("View name:");
@@ -889,68 +1181,71 @@ export default function RequestBinPage(): React.ReactNode {
       id: crypto.randomUUID(),
       name,
       createdAt: new Date().toISOString(),
-      filter: {
-        methods: [...filterState.methods],
-        timeFrom: filterState.timeFrom,
-        timeTo: filterState.timeTo,
-        routes: filterState.routes,
-        logic: filterState.logic,
-      },
+      filterGroups: filterState.groups,
       search: searchState,
     };
 
     setSavedViews((prev) => {
       const next = [...prev, view].slice(-MAX_VIEWS);
-      saveToStorage("requestbin-views", next);
+      saveToStorage("requestbin-views-v2", next);
       return next;
     });
     setActiveViewId(view.id);
-    saveToStorage("requestbin-active-view", view.id);
+    saveToStorage("requestbin-active-view-v2", view.id);
   }, [filterState, searchState]);
 
-  const handleDeleteView = useCallback(() => {
-    if (activeViewId === "default") return;
+  const handleDeleteView = useCallback((viewId: string) => {
     setSavedViews((prev) => {
-      const next = prev.filter((v) => v.id !== activeViewId);
-      saveToStorage("requestbin-views", next);
+      const next = prev.filter((v) => v.id !== viewId);
+      saveToStorage("requestbin-views-v2", next);
       return next;
     });
-    setActiveViewId("default");
-    saveToStorage("requestbin-active-view", "default");
-    setFilterState(createDefaultFilter());
-    setSearchState(createDefaultSearch());
+    if (activeViewId === viewId) {
+      setActiveViewId("default");
+      saveToStorage("requestbin-active-view-v2", "default");
+      setFilterState(createDefaultFilterState());
+      setSearchState(createDefaultSearch());
+    }
+    setTabContextMenuId(null);
   }, [activeViewId]);
 
-  const handleSwitchView = useCallback(
-    (viewId: string) => {
-      setActiveViewId(viewId);
-      saveToStorage("requestbin-active-view", viewId);
+  const handleRenameView = useCallback((viewId: string) => {
+    const view = savedViews.find((v) => v.id === viewId);
+    if (!view) return;
+    const rawName = window.prompt("New name:", view.name);
+    if (!rawName) return;
+    const name = rawName.trim().slice(0, MAX_VIEW_NAME_LENGTH);
+    if (name.length < 1) return;
 
-      if (viewId === "default") {
-        setFilterState(createDefaultFilter());
-        setSearchState(createDefaultSearch());
-        return;
-      }
+    setSavedViews((prev) => {
+      const next = prev.map((v) => v.id === viewId ? { ...v, name } : v);
+      saveToStorage("requestbin-views-v2", next);
+      return next;
+    });
+    setTabContextMenuId(null);
+  }, [savedViews]);
 
-      const view = savedViews.find((v) => v.id === viewId);
-      if (!view) return;
+  const handleSwitchView = useCallback((viewId: string) => {
+    setActiveViewId(viewId);
+    saveToStorage("requestbin-active-view-v2", viewId);
 
-      setFilterState({
-        methods: new Set(view.filter.methods),
-        timeFrom: view.filter.timeFrom || "",
-        timeTo: view.filter.timeTo || "",
-        routes: Array.isArray(view.filter.routes) ? view.filter.routes : [],
-        logic: view.filter.logic === "OR" ? "OR" : "AND",
-      });
-      setSearchState({
-        query: view.search.query || "",
-        isRegex: Boolean(view.search.isRegex),
-        caseSensitive: Boolean(view.search.caseSensitive),
-        wholeWord: Boolean(view.search.wholeWord),
-      });
-    },
-    [savedViews],
-  );
+    if (viewId === "default") {
+      setFilterState(createDefaultFilterState());
+      setSearchState(createDefaultSearch());
+      return;
+    }
+
+    const view = savedViews.find((v) => v.id === viewId);
+    if (!view) return;
+
+    setFilterState({ groups: view.filterGroups ?? [] });
+    setSearchState({
+      query: view.search?.query ?? "",
+      isRegex: Boolean(view.search?.isRegex),
+      caseSensitive: Boolean(view.search?.caseSensitive),
+      wholeWord: Boolean(view.search?.wholeWord),
+    });
+  }, [savedViews]);
 
   const handleExportViews = useCallback(() => {
     if (savedViews.length === 0) return;
@@ -965,38 +1260,33 @@ export default function RequestBinPage(): React.ReactNode {
     URL.revokeObjectURL(url);
   }, [savedViews]);
 
-  const handleImportViews = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
+  const handleImportViews = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const raw: unknown = JSON.parse(String(reader.result));
-          if (!Array.isArray(raw)) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const raw: unknown = JSON.parse(String(reader.result));
+        if (!Array.isArray(raw)) return;
 
-          const valid = raw.filter(isValidSavedView);
-          if (valid.length === 0) return;
+        const valid = raw.filter(isValidSavedView);
+        if (valid.length === 0) return;
 
-          setSavedViews((prev) => {
-            const existingIds = new Set(prev.map((v) => v.id));
-            const newViews = valid.filter((v) => !existingIds.has(v.id));
-            const merged = [...prev, ...newViews].slice(-MAX_VIEWS);
-            saveToStorage("requestbin-views", merged);
-            return merged;
-          });
-        } catch {
-          // malformed JSON — silently ignore
-        }
-      };
-      reader.readAsText(file);
-
-      // reset input so re-importing the same file works
-      e.target.value = "";
-    },
-    [],
-  );
+        setSavedViews((prev) => {
+          const existingIds = new Set(prev.map((v) => v.id));
+          const newViews = valid.filter((v) => !existingIds.has(v.id));
+          const merged = [...prev, ...newViews].slice(-MAX_VIEWS);
+          saveToStorage("requestbin-views-v2", merged);
+          return merged;
+        });
+      } catch {
+        // malformed JSON
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }, []);
 
   // --- Resize handlers ---
 
@@ -1009,10 +1299,7 @@ export default function RequestBinPage(): React.ReactNode {
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!isDragging.current) return;
-      const newWidth = Math.max(
-        MIN_PANEL_WIDTH,
-        Math.min(moveEvent.clientX, MAX_PANEL_WIDTH),
-      );
+      const newWidth = Math.max(MIN_PANEL_WIDTH, Math.min(moveEvent.clientX, MAX_PANEL_WIDTH));
       setPanelWidth(newWidth);
     };
 
@@ -1023,12 +1310,8 @@ export default function RequestBinPage(): React.ReactNode {
       document.body.style.userSelect = "";
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
-      // read from ref to get latest value
       try {
-        localStorage.setItem(
-          "requestbin-panel-width",
-          String(panelWidthRef.current),
-        );
+        localStorage.setItem("requestbin-panel-width", String(panelWidthRef.current));
       } catch {
         // localStorage unavailable
       }
@@ -1040,19 +1323,269 @@ export default function RequestBinPage(): React.ReactNode {
 
   // --- Collapse handlers ---
 
-  const toggleCollapse = useCallback(
-    (section: keyof CollapsedSections) => {
-      setCollapsed((prev) => ({ ...prev, [section]: !prev[section] }));
-    },
-    [],
-  );
+  const toggleCollapse = useCallback((section: keyof CollapsedSections) => {
+    setCollapsed((prev) => ({ ...prev, [section]: !prev[section] }));
+  }, []);
 
-  // --- Derived values ---
+  // --- Derived ---
 
-  const activeFilterCount = countActiveFilters(filterState);
-  const matchCount = searchState.query.trim()
-    ? displayedRequests.length
-    : null;
+  const allFilters = getAllFilters(filterState);
+  const matchCount = searchState.query.trim() ? displayedRequests.length : null;
+
+  // --- Render filter chips ---
+
+  function renderFilterChips(): React.ReactNode {
+    if (filterState.groups.length === 0) return null;
+
+    return filterState.groups.map((group, groupIdx) => (
+      <span key={group.id} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+        {groupIdx > 0 && <span className="rb-chip-logic">AND</span>}
+        {filterState.groups.length > 1 && group.filters.length > 0 && (
+          <span className="rb-group-bracket">(</span>
+        )}
+        {group.filters.map((f, filterIdx) => (
+          <span key={f.id} style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            {filterIdx > 0 && (
+              <button
+                type="button"
+                className="rb-group-logic-toggle"
+                onClick={() => toggleGroupLogic(group.id)}
+                title={`Click to toggle ${group.logic === "AND" ? "OR" : "AND"}`}
+              >
+                {group.logic}
+              </button>
+            )}
+            <span className="rb-chip">
+              <span style={{ fontWeight: 600 }}>{f.field}</span>
+              {" "}
+              {operatorLabel(f.operator)}
+              {" "}
+              {filterDisplayValue(f)}
+              <button
+                type="button"
+                className="rb-chip-remove"
+                onClick={() => removeFilter(f.id)}
+                aria-label="Remove filter"
+              >
+                ×
+              </button>
+            </span>
+          </span>
+        ))}
+        {filterState.groups.length > 1 && group.filters.length > 0 && (
+          <span className="rb-group-bracket">)</span>
+        )}
+      </span>
+    ));
+  }
+
+  // --- Render filter dropdown ---
+
+  function renderFilterDropdown(): React.ReactNode {
+    if (!filterDropdownOpen) return null;
+
+    return (
+      <div className="rb-filter-dropdown">
+        <div className="rb-filter-dropdown-title">Add Filter...</div>
+        <div className="rb-filter-dropdown-divider" />
+        <button
+          type="button"
+          className="rb-filter-dropdown-item"
+          onClick={() => {
+            addFilterGroup();
+            setFilterDropdownOpen(false);
+          }}
+        >
+          <span>( ) Add filter group</span>
+        </button>
+        <div className="rb-filter-dropdown-divider" />
+        {FILTER_FIELDS.map((ff) => (
+          <div key={ff.value} className="rb-submenu-wrap">
+            <button
+              type="button"
+              className="rb-filter-dropdown-item"
+              onMouseEnter={() => {
+                setActiveFieldMenu(ff.value);
+                setActiveOperatorMenu(null);
+                setPendingMethodSelections(new Set());
+                setPendingInputValue("");
+                setPendingInputValueTo("");
+              }}
+            >
+              <span>{ff.label}</span>
+              <span className="rb-arrow">&#9656;</span>
+            </button>
+            {activeFieldMenu === ff.value && (
+              <div className="rb-submenu">
+                {FIELD_OPERATORS[ff.value].map((op) => (
+                  <div key={op.value} className="rb-submenu-wrap">
+                    <button
+                      type="button"
+                      className="rb-filter-dropdown-item"
+                      onMouseEnter={() => {
+                        setActiveOperatorMenu(op.value);
+                        setPendingMethodSelections(new Set());
+                        setPendingInputValue("");
+                        setPendingInputValueTo("");
+                      }}
+                      onClick={() => {
+                        if (ff.value !== "method" && ff.value !== "time") {
+                          setActiveOperatorMenu(op.value);
+                        }
+                      }}
+                    >
+                      <span>{op.label}</span>
+                      <span className="rb-arrow">&#9656;</span>
+                    </button>
+                    {activeOperatorMenu === op.value && renderOperatorInput(ff.value, op.value)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function renderOperatorInput(field: FilterField, operator: FilterOperator): React.ReactNode {
+    if (field === "method") {
+      if (operator === "is") {
+        return (
+          <div className="rb-submenu">
+            {HTTP_METHODS.map((m) => (
+              <button
+                key={m}
+                type="button"
+                className="rb-method-option"
+                onClick={() => handleMethodSingleSelect(m)}
+              >
+                <span className={`rb-method rb-method-${m.toLowerCase()}`}>{m}</span>
+              </button>
+            ))}
+          </div>
+        );
+      }
+      // is_any_of / is_none_of: multi-select
+      return (
+        <div className="rb-submenu">
+          {HTTP_METHODS.map((m) => (
+            <label key={m} className="rb-method-option">
+              <input
+                type="checkbox"
+                className="rb-method-checkbox"
+                checked={pendingMethodSelections.has(m)}
+                onChange={() => {
+                  setPendingMethodSelections((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(m)) {
+                      next.delete(m);
+                    } else {
+                      next.add(m);
+                    }
+                    return next;
+                  });
+                }}
+              />
+              <span className={`rb-method rb-method-${m.toLowerCase()}`}>{m}</span>
+            </label>
+          ))}
+          <div className="rb-submenu-input-row">
+            <button
+              type="button"
+              className="rb-submenu-apply"
+              onClick={() => handleApplyFilter(field, operator)}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (field === "time") {
+      if (operator === "between") {
+        return (
+          <div className="rb-submenu">
+            <div className="rb-submenu-input-row">
+              <span style={{ fontSize: 12, color: "#656d76" }}>From</span>
+              <input
+                type="datetime-local"
+                className="rb-submenu-input"
+                value={pendingInputValue}
+                onChange={(e) => setPendingInputValue(e.target.value)}
+              />
+            </div>
+            <div className="rb-submenu-input-row">
+              <span style={{ fontSize: 12, color: "#656d76" }}>To</span>
+              <input
+                type="datetime-local"
+                className="rb-submenu-input"
+                value={pendingInputValueTo}
+                onChange={(e) => setPendingInputValueTo(e.target.value)}
+              />
+            </div>
+            <div className="rb-submenu-input-row">
+              <button
+                type="button"
+                className="rb-submenu-apply"
+                onClick={() => handleApplyFilter(field, operator)}
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        );
+      }
+      // after / before
+      return (
+        <div className="rb-submenu">
+          <div className="rb-submenu-input-row">
+            <input
+              type="datetime-local"
+              className="rb-submenu-input"
+              value={pendingInputValue}
+              onChange={(e) => setPendingInputValue(e.target.value)}
+            />
+            <button
+              type="button"
+              className="rb-submenu-apply"
+              onClick={() => handleApplyFilter(field, operator)}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Path, Body, Headers — text input
+    return (
+      <div className="rb-submenu">
+        <div className="rb-submenu-input-row">
+          <input
+            type="text"
+            className="rb-submenu-input"
+            placeholder={`Enter ${field} value...`}
+            value={pendingInputValue}
+            onChange={(e) => setPendingInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleApplyFilter(field, operator);
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="rb-submenu-apply"
+            onClick={() => handleApplyFilter(field, operator)}
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -1071,178 +1604,108 @@ export default function RequestBinPage(): React.ReactNode {
           </div>
         </div>
 
-        {/* Views bar */}
-        <div className="rb-views-bar">
+        {/* Views tab bar - Linear style */}
+        <div className="rb-view-tabs">
           <button
             type="button"
             className={`rb-view-tab${activeViewId === "default" ? " rb-active" : ""}`}
             onClick={() => handleSwitchView("default")}
           >
-            Default
+            All requests
           </button>
           {savedViews.map((v) => (
-            <button
-              key={v.id}
-              type="button"
-              className={`rb-view-tab${activeViewId === v.id ? " rb-active" : ""}`}
-              onClick={() => handleSwitchView(v.id)}
-            >
-              {v.name}
-            </button>
-          ))}
-          <div className="rb-view-actions">
-            <button type="button" onClick={handleSaveView}>
-              Save view
-            </button>
-            {activeViewId !== "default" && (
-              <button type="button" onClick={handleDeleteView}>
-                Delete view
+            <span key={v.id} className="rb-view-tab-ctx" ref={tabContextMenuId === v.id ? tabContextMenuRef : undefined}>
+              <button
+                type="button"
+                className={`rb-view-tab${activeViewId === v.id ? " rb-active" : ""}`}
+                onClick={() => handleSwitchView(v.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setTabContextMenuId(tabContextMenuId === v.id ? null : v.id);
+                }}
+              >
+                {v.name}
               </button>
-            )}
-            <button type="button" onClick={handleExportViews}>
-              Export
-            </button>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Import
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              style={{ display: "none" }}
-              onChange={handleImportViews}
-            />
-          </div>
+              {tabContextMenuId === v.id && (
+                <div className="rb-tab-context-menu">
+                  <button type="button" onClick={() => handleRenameView(v.id)}>
+                    Rename
+                  </button>
+                  <button type="button" className="rb-danger" onClick={() => handleDeleteView(v.id)}>
+                    Delete
+                  </button>
+                  <button type="button" onClick={handleExportViews}>
+                    Export
+                  </button>
+                </div>
+              )}
+            </span>
+          ))}
+          <button
+            type="button"
+            className="rb-view-add"
+            onClick={handleSaveView}
+            title="Save current filters as a view"
+          >
+            +
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: "none" }}
+            onChange={handleImportViews}
+          />
+          <button
+            type="button"
+            className="rb-view-add"
+            onClick={() => fileInputRef.current?.click()}
+            title="Import views"
+            style={{ fontSize: 13, color: "#656d76" }}
+          >
+            Import
+          </button>
         </div>
 
-        {/* Filter bar */}
-        <div className="rb-filter-bar">
-          <div className="rb-filter-group">
-            <label>Method</label>
-            {HTTP_METHODS.map((m) => {
-              const isActive = filterState.methods.has(m);
-              return (
-                <button
-                  key={m}
-                  type="button"
-                  className={`rb-method-toggle${isActive ? ` rb-active rb-active-${m.toLowerCase()}` : ""}`}
-                  onClick={() => toggleMethod(m)}
-                >
-                  {m}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="rb-filter-group">
-            <label>From</label>
-            <input
-              type="datetime-local"
-              className="rb-filter-input"
-              value={filterState.timeFrom}
-              onChange={(e) =>
-                setFilterState((prev) => ({
-                  ...prev,
-                  timeFrom: e.target.value,
-                }))
-              }
-            />
-            <label>To</label>
-            <input
-              type="datetime-local"
-              className="rb-filter-input"
-              value={filterState.timeTo}
-              onChange={(e) =>
-                setFilterState((prev) => ({
-                  ...prev,
-                  timeTo: e.target.value,
-                }))
-              }
-            />
-          </div>
-
-          <div className="rb-filter-group" style={{ flexWrap: "wrap" }}>
-            <label>Route</label>
-            {filterState.routes.map((rf, i) => (
-              <div key={i} className="rb-route-row">
-                <select
-                  className="rb-filter-select"
-                  value={rf.mode}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (isRouteMode(val)) {
-                      updateRouteFilter(i, { mode: val });
-                    }
-                  }}
-                >
-                  <option value="contains">contains</option>
-                  <option value="exact">exact</option>
-                  <option value="starts-with">starts with</option>
-                </select>
-                <input
-                  className="rb-filter-input"
-                  placeholder="/path..."
-                  value={rf.value}
-                  maxLength={MAX_ROUTE_VALUE_LENGTH}
-                  onChange={(e) =>
-                    updateRouteFilter(i, { value: e.target.value })
-                  }
-                />
-                <button
-                  type="button"
-                  className="rb-route-remove"
-                  onClick={() => removeRouteFilter(i)}
-                  aria-label="Remove route filter"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+        {/* Filter chips + Filter button */}
+        <div className="rb-filter-area">
+          {renderFilterChips()}
+          {allFilters.length > 0 && (
             <button
               type="button"
-              className="rb-route-add"
-              onClick={addRouteFilter}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#cf222e",
+                fontSize: 12,
+                fontFamily: "inherit",
+                padding: "0 4px",
+              }}
+              onClick={clearAllFilters}
             >
-              + Route
+              Clear all
             </button>
-          </div>
-
-          <div className="rb-filter-group">
-            <label>Logic</label>
-            <button
-              type="button"
-              className={`rb-logic-toggle${filterState.logic === "AND" ? " rb-active" : ""}`}
-              onClick={() =>
-                setFilterState((prev) => ({ ...prev, logic: "AND" }))
-              }
-            >
-              AND
-            </button>
-            <button
-              type="button"
-              className={`rb-logic-toggle${filterState.logic === "OR" ? " rb-active" : ""}`}
-              onClick={() =>
-                setFilterState((prev) => ({ ...prev, logic: "OR" }))
-              }
-            >
-              OR
-            </button>
-          </div>
-
-          {(activeFilterCount > 0 || searchState.query.trim()) && (
-            <div className="rb-filter-status">
-              <span>
-                {activeFilterCount} filter{activeFilterCount !== 1 ? "s" : ""}{" "}
-                active
-              </span>
-              <button type="button" onClick={clearFilters}>
-                Clear filters
-              </button>
-            </div>
           )}
+          <div
+            className="rb-filter-dropdown-wrap"
+            ref={filterDropdownRef}
+            style={{ marginLeft: allFilters.length > 0 ? "auto" : 0 }}
+          >
+            <button
+              type="button"
+              className="rb-filter-btn"
+              onClick={() => {
+                setFilterDropdownOpen((prev) => !prev);
+                setActiveFieldMenu(null);
+                setActiveOperatorMenu(null);
+                setAddingToGroupId(null);
+              }}
+            >
+              &#8862; Filter
+            </button>
+            {renderFilterDropdown()}
+          </div>
         </div>
 
         {/* Search bar */}
@@ -1260,10 +1723,7 @@ export default function RequestBinPage(): React.ReactNode {
             type="button"
             className={`rb-search-toggle${searchState.isRegex ? " rb-active" : ""}`}
             onClick={() =>
-              setSearchState((prev) => ({
-                ...prev,
-                isRegex: !prev.isRegex,
-              }))
+              setSearchState((prev) => ({ ...prev, isRegex: !prev.isRegex }))
             }
             title="Regex mode"
           >
@@ -1273,10 +1733,7 @@ export default function RequestBinPage(): React.ReactNode {
             type="button"
             className={`rb-search-toggle${searchState.caseSensitive ? " rb-active" : ""}`}
             onClick={() =>
-              setSearchState((prev) => ({
-                ...prev,
-                caseSensitive: !prev.caseSensitive,
-              }))
+              setSearchState((prev) => ({ ...prev, caseSensitive: !prev.caseSensitive }))
             }
             title="Case sensitive"
           >
@@ -1286,10 +1743,7 @@ export default function RequestBinPage(): React.ReactNode {
             type="button"
             className={`rb-search-toggle${searchState.wholeWord ? " rb-active" : ""}`}
             onClick={() =>
-              setSearchState((prev) => ({
-                ...prev,
-                wholeWord: !prev.wholeWord,
-              }))
+              setSearchState((prev) => ({ ...prev, wholeWord: !prev.wholeWord }))
             }
             title="Whole word"
           >
@@ -1321,9 +1775,7 @@ export default function RequestBinPage(): React.ReactNode {
                   className={`rb-list-item${i === selectedIndex ? " rb-selected" : ""}`}
                   onClick={() => setSelectedIndex(i)}
                 >
-                  <span
-                    className={`rb-method rb-method-${r.method.toLowerCase()}`}
-                  >
+                  <span className={`rb-method rb-method-${r.method.toLowerCase()}`}>
                     {r.method}
                   </span>
                   <span className="rb-path">{r.path}</span>
@@ -1343,9 +1795,7 @@ export default function RequestBinPage(): React.ReactNode {
               <>
                 <div className="rb-detail-header">
                   <div className="rb-detail-title">
-                    <span
-                      className={`rb-method rb-method-${selected.method.toLowerCase()}`}
-                    >
+                    <span className={`rb-method rb-method-${selected.method.toLowerCase()}`}>
                       {selected.method}
                     </span>
                     <span className="rb-path">{selected.path}</span>
