@@ -5,7 +5,7 @@ export default function Hero() {
   return (
     <section className="px-6 py-20 md:py-28 lg:py-36 bg-page">
       <div className="max-w-7xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="flex flex-col items-center md:grid md:grid-cols-2 gap-12 lg:gap-16 md:items-center">
           {/* Left Content */}
           <div className="space-y-5">
             <p className="font-mono text-sm text-muted tracking-wide">
