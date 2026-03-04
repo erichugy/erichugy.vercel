@@ -9,7 +9,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import type { Mix } from '../lib/types';
 import { loadMixes, saveMixes, getCurrentMixId, setCurrentMixId } from '../lib/storage';
-import { AUTO_SAVE_DEBOUNCE_MS } from '../lib/constants';
+import { AUTO_SAVE_DEBOUNCE_MS, STORAGE_KEYS } from '../lib/constants';
 
 interface UseMixStorageReturn {
   /** All loaded mixes */
@@ -109,9 +109,9 @@ export function useMixStorage(): UseMixStorageReturn {
     setCurrentMixIdState(id);
     try {
       if (id === null) {
-        localStorage.removeItem('mixer_current_id');
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_MIX_ID);
       } else {
-        localStorage.setItem('mixer_current_id', id);
+        localStorage.setItem(STORAGE_KEYS.CURRENT_MIX_ID, id);
       }
     } catch (err) {
       setError((err as Error).message);
@@ -121,16 +121,23 @@ export function useMixStorage(): UseMixStorageReturn {
 
   /**
    * Cleanup: save any pending changes on unmount
+   * Use ref to access current mixes without triggering debounce reset
    */
+  const mixesRef = useRef(mixes);
+
+  useEffect(() => {
+    mixesRef.current = mixes;
+  }, [mixes]);
+
   useEffect(() => {
     return () => {
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
         // Force final save
-        saveMixes(mixes);
+        saveMixes(mixesRef.current);
       }
     };
-  }, [mixes]);
+  }, []);
 
   return {
     mixes,

@@ -3,7 +3,7 @@
  * Displays a single sound with volume and offset controls
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import type { Sound, SoundInstance } from '../lib/types';
 import { VolumeSlider } from './VolumeSlider';
 import { OffsetSlider } from './OffsetSlider';
@@ -50,6 +50,11 @@ export const SoundCard: React.FC<SoundCardProps> = ({
     onToggle(!instance.enabled);
   }, [instance.enabled, onToggle]);
 
+  // Memoize waveform heights to prevent re-randomization on every render
+  const waveformHeights = useMemo(() => {
+    return [...Array(20)].map(() => 20 + Math.random() * 60);
+  }, []);
+
   return (
     <div
       className={`border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 transition-opacity ${
@@ -78,12 +83,12 @@ export const SoundCard: React.FC<SoundCardProps> = ({
       {/* Waveform placeholder */}
       <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-md h-12 flex items-center justify-center">
         <div className="flex gap-1 items-end h-8">
-          {[...Array(20)].map((_, i) => (
+          {waveformHeights.map((height, i) => (
             <div
               key={i}
               className="w-1 bg-blue-400 rounded-full opacity-60"
               style={{
-                height: `${20 + Math.random() * 60}%`,
+                height: `${height}%`,
               }}
             />
           ))}

@@ -9,7 +9,6 @@
 import { useCallback } from 'react';
 import type { Mix, SoundInstance } from '../lib/types';
 import {
-  DEFAULT_MIX_NAME_PREFIX,
   BUILT_IN_SOUNDS,
   DEFAULT_SOUND_INSTANCE,
   getNextDefaultMixName,

@@ -20,7 +20,7 @@ The following files are required and should be placed in this directory:
 You can download royalty-free nature sounds from:
 
 - **Freesound.org** - https://freesound.org (CC0, attribution required)
-- **Unsplash Audio** - https://unsplash.com/napi/search/audios (CC0)
+- **Pixabay Sound Effects** - https://pixabay.com/sound-effects/ (CC0)
 - **Zapsplat** - https://www.zapsplat.com (free, commercial use allowed)
 - **BBC Sound Effects** - https://sound-effects.bbcrewind.co.uk/ (CC0)
 - **Free Music Archive** - https://freemusicarchive.org

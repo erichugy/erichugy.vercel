@@ -3,7 +3,7 @@
  * Shows current playback progress and time
  */
 
-import React, { useCallback } from 'react';
+import React from 'react';
 
 interface ProgressBarProps {
   /** Current time in seconds */

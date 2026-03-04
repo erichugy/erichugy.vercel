@@ -261,6 +261,13 @@ export function importMixerData(blob: Blob): Promise<{
         });
       }
     };
+    reader.onerror = () => {
+      resolve({
+        success: false,
+        message: 'Failed to read file',
+        mixes: [],
+      });
+    };
     reader.readAsText(blob);
   }) as Promise<{
     success: boolean;

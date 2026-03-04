@@ -45,6 +45,7 @@ export class AudioEngine {
     currentOffset: 0,
   };
   private soundInstances: Map<string, AudioBufferSourceNode> = new Map();
+  private lastPlayedSounds: SoundInstance[] | null = null;
 
   /**
    * Initialize audio context and setup
@@ -199,6 +200,9 @@ export class AudioEngine {
       source.buffer = loaded.buffer;
       source.connect(loaded.gainNode);
 
+      // Enable looping so sounds repeat continuously
+      source.loop = true;
+
       // Set volume (convert 0-100 to 0-1, with logarithmic scaling for better UX)
       const normalizedVolume = Math.max(0, Math.min(100, volume)) / 100;
       const logVolume = normalizedVolume === 0 ? 0 : Math.pow(normalizedVolume, 2);
@@ -223,15 +227,17 @@ export class AudioEngine {
   }
 
   /**
-   * Stop a specific sound
+   * Stop a specific sound instance
    */
-  public stopSound(soundId: string): void {
+  public stopSound(soundId: string, soundInstanceId?: string): void {
     try {
-      const source = this.soundInstances.get(soundId);
+      // If soundInstanceId is provided, use the composite key
+      const key = soundInstanceId ? `${soundId}_${soundInstanceId}` : soundId;
+      const source = this.soundInstances.get(key);
       if (source) {
         source.stop();
-        this.soundInstances.delete(soundId);
-        console.log(`[AudioEngine] Stopped ${soundId}`);
+        this.soundInstances.delete(key);
+        console.log(`[AudioEngine] Stopped ${key}`);
       }
     } catch (error) {
       console.error(`[AudioEngine] Failed to stop sound ${soundId}:`, error);
@@ -312,6 +318,9 @@ export class AudioEngine {
     }
 
     try {
+      // Store sounds for resume functionality
+      this.lastPlayedSounds = soundInstances;
+
       // Stop any currently playing sounds first
       this.stopAll();
 
@@ -375,11 +384,15 @@ export class AudioEngine {
 
     try {
       if (this.playbackState.isPaused) {
-        // Note: Cannot truly resume - must restart from current position
-        // This is a Web Audio API limitation
-        this.playbackState.startTime = this.audioContext.currentTime;
-        this.playbackState.isPaused = false;
-        console.log('[AudioEngine] Resumed playback');
+        if (this.lastPlayedSounds) {
+          // Replay the mix from current offset
+          this.playMix(this.lastPlayedSounds);
+          // Adjust start time to account for pause duration
+          const pauseDuration = this.audioContext.currentTime - this.playbackState.pauseTime;
+          this.playbackState.startTime = this.audioContext.currentTime - this.playbackState.currentOffset;
+        } else {
+          console.warn('[AudioEngine] No previous mix to resume');
+        }
       }
     } catch (error) {
       console.error('[AudioEngine] Failed to resume:', error);

@@ -96,7 +96,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
       {/* Pause/Resume Button */}
       <button
         onClick={handlePauseClick}
-        disabled={!isReady || !isPlaying}
+        disabled={!isReady || (!isPlaying && !isPaused)}
         aria-label={isPaused ? 'Resume' : 'Pause'}
         title={isPaused ? 'Resume playback' : 'Pause playback'}
         className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors text-white ${
@@ -135,11 +135,11 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
       {/* Stop Button */}
       <button
         onClick={handleStopClick}
-        disabled={!isReady || !isPlaying}
+        disabled={!isReady || (!isPlaying && !isPaused)}
         aria-label="Stop"
         title="Stop playback"
         className={`flex-1 px-4 py-3 rounded-lg font-semibold transition-colors text-white ${
-          isPlaying
+          isPlaying || isPaused
             ? 'bg-red-500 hover:bg-red-600 active:bg-red-700'
             : 'bg-gray-400 cursor-not-allowed'
         } disabled:opacity-50 disabled:cursor-not-allowed`}

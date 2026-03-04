@@ -7,7 +7,7 @@ import React, { useState, useCallback, useEffect, ReactNode } from 'react';
 import { useMixStorage } from '../hooks/useMixStorage';
 import { useMixActions } from '../hooks/useMixActions';
 import { useAudioEngine } from '../hooks/useAudioEngine';
-import type { Mix } from '../lib/types';
+import type { Mix, SoundInstance } from '../lib/types';
 
 interface MixerContextType {
   // Mix state
@@ -32,7 +32,7 @@ interface MixerContextType {
   duration: number;
 
   // Audio controls
-  playMix: (sounds: any[]) => void;
+  playMix: (sounds: SoundInstance[]) => void;
   pause: () => void;
   resume: () => void;
   stop: () => void;
