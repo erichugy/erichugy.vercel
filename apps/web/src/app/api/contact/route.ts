@@ -45,7 +45,7 @@ function isRateLimited(ip: string): boolean {
 
   // NOTE: opportunistic cleanup — prune expired entries during each check
   // so memory stays bounded even if the periodic cleanup timer doesn't fire
-  if (rateLimiter.size > MAX_RATE_ENTRIES) {
+  if (rateLimiter.size >= MAX_RATE_ENTRIES) {
     for (const [key, entry] of rateLimiter) {
       if (now - entry.windowStart > WINDOW_MS) {
         rateLimiter.delete(key);
@@ -86,8 +86,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // NOTE: fall back to "anonymous" so requests without IP headers still get
   // rate-limited as a group, rather than bypassing the limit entirely
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-    ?? req.headers.get("x-real-ip")?.trim()
-    ?? "anonymous";
+    || req.headers.get("x-real-ip")?.trim()
+    || "anonymous";
   if (isRateLimited(ip)) {
     return NextResponse.json(
       { error: "Too many messages. Please try again later." },
