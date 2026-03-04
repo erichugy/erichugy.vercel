@@ -688,7 +688,7 @@ const styles = `
   .rb-filter-dropdown {
     position: absolute;
     top: calc(100% + 4px);
-    right: 0;
+    left: 0;
     background: #ffffff;
     border: 1px solid #d0d7de;
     border-radius: 8px;
@@ -731,7 +731,7 @@ const styles = `
   .rb-submenu {
     position: absolute;
     top: -4px;
-    right: 100%;
+    left: 100%;
     background: #ffffff;
     border: 1px solid #d0d7de;
     border-radius: 8px;
