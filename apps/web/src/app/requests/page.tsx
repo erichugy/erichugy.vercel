@@ -71,6 +71,7 @@ const MAX_VIEWS = 50;
 const MAX_ROUTE_FILTERS = 20;
 const MAX_VIEW_NAME_LENGTH = 100;
 const MAX_ROUTE_VALUE_LENGTH = 500;
+const MAX_SEARCH_QUERY_LENGTH = 1000;
 const ROUTE_MODES = ["contains", "exact", "starts-with"] as const;
 
 // --- Helpers ---
@@ -104,12 +105,17 @@ function syntaxHighlightJson(obj: unknown): string {
   );
 }
 
+function isCapturedRequest(v: unknown): v is CapturedRequest {
+  if (typeof v !== "object" || v === null) return false;
+  return "id" in v && "method" in v && "path" in v && "timestamp" in v;
+}
+
 function formatTime(ts: string): string {
   return new Date(ts).toLocaleTimeString();
 }
 
 function isRouteMode(val: string): val is RouteFilter["mode"] {
-  return (ROUTE_MODES as ReadonlyArray<string>).includes(val);
+  return ROUTE_MODES.some((m) => m === val);
 }
 
 function createDefaultFilter(): FilterState {
@@ -205,13 +211,13 @@ function countActiveFilters(filter: FilterState): number {
 
 // --- localStorage helpers with try/catch for private browsing ---
 
-function loadFromStorage<T>(key: string, fallback: T): T {
+function loadFromStorage(key: string): unknown {
   try {
     const raw = localStorage.getItem(key);
-    if (raw === null) return fallback;
-    return JSON.parse(raw) as T;
+    if (raw === null) return null;
+    return JSON.parse(raw);
   } catch {
-    return fallback;
+    return null;
   }
 }
 
@@ -223,27 +229,27 @@ function saveToStorage(key: string, value: unknown): void {
   }
 }
 
+function hasStringProp(o: object, key: string): boolean {
+  return key in o && typeof (o as Record<string, unknown>)[key] === "string";
+}
+
+function hasObjectProp(o: object, key: string): boolean {
+  const val = (o as Record<string, unknown>)[key];
+  return key in o && typeof val === "object" && val !== null;
+}
+
 function isValidSavedView(v: unknown): v is SavedView {
   if (typeof v !== "object" || v === null) return false;
-  // re-parse to get a clean Record type without using `as` casts
-  try {
-    const obj: Record<string, unknown> = JSON.parse(JSON.stringify(v));
-    return (
-      typeof obj.id === "string" &&
-      typeof obj.name === "string" &&
-      typeof obj.createdAt === "string" &&
-      typeof obj.filter === "object" &&
-      obj.filter !== null &&
-      typeof obj.search === "object" &&
-      obj.search !== null
-    );
-  } catch {
-    return false;
-  }
+  return (
+    hasStringProp(v, "id") &&
+    hasStringProp(v, "name") &&
+    hasObjectProp(v, "filter") &&
+    hasObjectProp(v, "search")
+  );
 }
 
 function loadViews(): SavedView[] {
-  const raw = loadFromStorage<unknown[]>("requestbin-views", []);
+  const raw = loadFromStorage("requestbin-views");
   if (!Array.isArray(raw)) return [];
   return raw.filter(isValidSavedView).slice(0, MAX_VIEWS);
 }
@@ -710,10 +716,7 @@ export default function RequestBinPage(): React.ReactNode {
     const views = loadViews();
     setSavedViews(views);
 
-    const activeId = loadFromStorage<string>(
-      "requestbin-active-view",
-      "default",
-    );
+    const activeId = loadFromStorage("requestbin-active-view") || "default";
     if (typeof activeId === "string") {
       setActiveViewId(activeId);
       // Restore view state if not default
@@ -749,36 +752,37 @@ export default function RequestBinPage(): React.ReactNode {
     panelWidthRef.current = panelWidth;
   }, [panelWidth]);
 
-  // Fetch requests with abort controller
-  const fetchRequests = useCallback(async () => {
+  // Fetch requests with abort controller — returns controller for cleanup
+  const fetchRequests = useCallback((): AbortController => {
     const thisId = ++fetchIdRef.current;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
 
-    try {
-      const res = await fetch("/api/requests", {
-        signal: controller.signal,
-      });
-      if (!res.ok) return;
-      let data: CapturedRequest[];
+    (async () => {
       try {
-        data = (await res.json()) as CapturedRequest[];
+        const res = await fetch("/api/requests", {
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const raw: unknown = await res.json().catch(() => null);
+        if (!Array.isArray(raw)) return;
+        const validated = raw.filter(isCapturedRequest);
+        if (isMountedRef.current && fetchIdRef.current === thisId) {
+          setRequests(validated);
+        }
       } catch {
-        return;
+        // NOTE: network error or aborted — silently ignore
+      } finally {
+        clearTimeout(timeout);
       }
-      // guard against stale responses and unmounted component
-      if (isMountedRef.current && fetchIdRef.current === thisId) {
-        setRequests(data);
-      }
-    } catch {
-      // network error or aborted — silently ignore
-    } finally {
-      clearTimeout(timeout);
-    }
+    })();
+
+    return controller;
   }, []);
 
   useEffect(() => {
-    fetchRequests();
+    const controller = fetchRequests();
+    return () => { controller.abort(); };
   }, [fetchRequests]);
 
   const handleClear = useCallback(async () => {
@@ -1247,8 +1251,9 @@ export default function RequestBinPage(): React.ReactNode {
             className="rb-search-input"
             placeholder="Search requests..."
             value={searchState.query}
+            maxLength={MAX_SEARCH_QUERY_LENGTH}
             onChange={(e) =>
-              setSearchState((prev) => ({ ...prev, query: e.target.value }))
+              setSearchState((prev) => ({ ...prev, query: e.target.value.slice(0, MAX_SEARCH_QUERY_LENGTH) }))
             }
           />
           <button
