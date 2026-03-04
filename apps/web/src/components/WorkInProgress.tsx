@@ -1,6 +1,6 @@
-interface WorkInProgressProps {
+type WorkInProgressProps = {
   className?: string;
-}
+};
 
 export default function WorkInProgress({ className }: WorkInProgressProps) {
   return (

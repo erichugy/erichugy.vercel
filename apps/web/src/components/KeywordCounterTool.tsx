@@ -1,31 +1,38 @@
 "use client";
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 
-interface JobResponse {
-  id: string;
-  status: "running" | "completed" | "failed";
-  progress: {
-    stage: string;
-    pagesFetched: number;
-    messagesScanned: number;
-    messagesWithAnyKeyword: number;
-    matchedConversations: number;
-    elapsedSeconds: number;
-  };
-  error?: string;
-  summaryText?: string;
-  messageMatchesCount: number;
-  previewTruncated: boolean;
-  messageMatchesPreview: Array<{
-    conversationId: string;
-    keywords: string;
-    sender: string;
-    messageId: string;
-    message: string;
-  }>;
-  files: Array<{ name: string; size: number; downloadUrl: string }>;
-}
+const jobResponseSchema = z.object({
+  id: z.string(),
+  status: z.enum(["running", "completed", "failed"]),
+  progress: z.object({
+    stage: z.string(),
+    pagesFetched: z.number(),
+    messagesScanned: z.number(),
+    messagesWithAnyKeyword: z.number(),
+    matchedConversations: z.number(),
+    elapsedSeconds: z.number(),
+  }),
+  error: z.string().optional(),
+  summaryText: z.string().optional(),
+  messageMatchesCount: z.number(),
+  previewTruncated: z.boolean(),
+  messageMatchesPreview: z.array(z.object({
+    conversationId: z.string(),
+    keywords: z.string(),
+    sender: z.string(),
+    messageId: z.string(),
+    message: z.string(),
+  })),
+  files: z.array(z.object({
+    name: z.string(),
+    size: z.number(),
+    downloadUrl: z.string(),
+  })),
+});
+
+type JobResponse = z.infer<typeof jobResponseSchema>;
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) {
@@ -65,7 +72,13 @@ export default function KeywordCounterTool() {
         throw new Error(body?.error || "Failed to fetch tool status.");
       }
 
-      const data = (await response.json()) as JobResponse;
+      const raw = await response.json();
+      const parsed = jobResponseSchema.safeParse(raw);
+      if (!parsed.success) {
+        console.error("Malformed job status response:", parsed.error);
+        throw new Error("Received malformed job status from server.");
+      }
+      const data = parsed.data;
       setJob(data);
 
       if (data.status === "completed" || data.status === "failed") {

@@ -5,7 +5,7 @@ import { createKeywordCounterJob, getKeywordCounterJob } from "@/lib/keywordCoun
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   const body = await request.json().catch(() => null);
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   return NextResponse.json({ jobId: job.id });
 }
 
-export async function GET(request: Request) {
+export async function GET(request: Request): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
   const jobId = searchParams.get("jobId");
 

@@ -11,24 +11,39 @@ const PREVIEW_LIMIT = 200;
 
 export type KeywordCounterStatus = "running" | "completed" | "failed";
 
-export interface KeywordCounterInput {
+export type KeywordCounterInput = {
   pat: string;
   botId: string;
   keywords: string;
   startDate: string;
   endDate?: string;
   verbose?: boolean;
-}
+};
 
-export interface MessageMatchRow {
+export type MessageMatchRow = {
   conversationId: string;
   keywords: string;
   sender: string;
   messageId: string;
   message: string;
-}
+};
 
-export interface KeywordCounterJob {
+export type SummaryResult = {
+  runId: string;
+  createdAtUtc: string;
+  dateRangeUtc: { start: string; end: string };
+  keywords: string[];
+  totals: {
+    pagesFetched: number;
+    messagesScanned: number;
+    messagesWithAnyKeyword: number;
+    uniqueConversationsWithAnyKeyword: number;
+  };
+  keywordStats: Record<string, { occurrences: number; messagesContainingKeyword: number }>;
+  conversationIdsWithAnyKeyword: string[];
+};
+
+export type KeywordCounterJob = {
   id: string;
   status: KeywordCounterStatus;
   createdAt: string;
@@ -36,7 +51,7 @@ export interface KeywordCounterJob {
   outputDir: string;
   error?: string;
   summaryText?: string;
-  summary?: Record<string, unknown>;
+  summary?: SummaryResult;
   files: Array<{ name: string; size: number }>;
   messageMatchesCount: number;
   messageMatchesPreview: MessageMatchRow[];
@@ -48,7 +63,7 @@ export interface KeywordCounterJob {
     matchedConversations: number;
     elapsedSeconds: number;
   };
-}
+};
 
 const outputRoot = path.join(process.cwd(), ".tmp", "keyword-counter");
 
@@ -210,20 +225,7 @@ function createCsvChunkWriter(filePath: string, header: string[], chunkSize = 10
   };
 }
 
-function buildSummaryText(summary: {
-  runId: string;
-  createdAtUtc: string;
-  dateRangeUtc: { start: string; end: string };
-  keywords: string[];
-  totals: {
-    pagesFetched: number;
-    messagesScanned: number;
-    messagesWithAnyKeyword: number;
-    uniqueConversationsWithAnyKeyword: number;
-  };
-  keywordStats: Record<string, { occurrences: number; messagesContainingKeyword: number }>;
-  conversationIdsWithAnyKeyword: string[];
-}) {
+function buildSummaryText(summary: SummaryResult) {
   const lines: string[] = [];
   lines.push("Keyword Search Summary");
   lines.push("");
@@ -587,7 +589,7 @@ async function runJob(jobId: string, input: KeywordCounterInput) {
 
   updateJob(jobId, (job) => {
     job.status = "completed";
-    job.summary = summary as unknown as Record<string, unknown>;
+    job.summary = summary;
     job.summaryText = summaryText;
     job.files = files;
     job.progress.stage = "Completed";

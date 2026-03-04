@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
 
-const SOCIAL_ICONS: Record<string, React.ReactNode> = {
+const SOCIAL_ICONS: Record<string, ReactNode> = {
   in: (
     <svg
       xmlns="http://www.w3.org/2000/svg"
