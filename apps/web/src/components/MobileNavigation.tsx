@@ -8,10 +8,10 @@ import { NAV_LINKS } from "@/lib/constants";
 
 import ThemeToggle from "./ThemeToggle";
 
-interface MobileNavigationProps {
+type MobileNavigationProps = {
   isOpen: boolean;
   onClose: () => void;
-}
+};
 
 export default function MobileNavigation({
   isOpen,
@@ -57,6 +57,7 @@ export default function MobileNavigation({
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
+        onClick={(e) => e.stopPropagation()}
         className={`fixed inset-y-0 right-0 z-50 flex w-[85%] flex-col gap-8 overflow-y-auto bg-white/80 p-8 backdrop-blur-md transition-all duration-300 dark:bg-slate-900/80 dark:border-slate-700/50 border border-white/20 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
