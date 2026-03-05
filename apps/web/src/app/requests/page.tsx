@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import {
   useCallback,
   useEffect,
@@ -220,7 +221,7 @@ function matchesSingleFilter(req: CapturedRequest, f: SingleFilter): boolean {
       if (f.operator === "contains") return path.includes(val);
       if (f.operator === "not_contains") return !path.includes(val);
       if (f.operator === "starts_with") return path.startsWith(val);
-      if (f.operator === "equals") return req.path === f.value;
+      if (f.operator === "equals") return path === val;
       return true;
     }
     case "time": {
@@ -328,11 +329,6 @@ function hasStringProp(o: object, key: string): boolean {
   return key in o && typeof (o as Record<string, unknown>)[key] === "string";
 }
 
-function hasObjectProp(o: object, key: string): boolean {
-  const val = (o as Record<string, unknown>)[key];
-  return key in o && typeof val === "object" && val !== null;
-}
-
 function refContainsTarget(
   ref: React.RefObject<HTMLElement | null>,
   e: MouseEvent,
@@ -347,6 +343,16 @@ function isValidSavedView(v: unknown): v is SavedView {
   if ("filterGroups" in v) {
     const groups = (v as Record<string, unknown>).filterGroups;
     if (!Array.isArray(groups)) return false;
+    // NOTE: validate each group has the required shape to prevent runtime crashes
+    for (const g of groups) {
+      if (typeof g !== "object" || g === null) return false;
+      if (!("id" in g) || !("logic" in g) || !("filters" in g)) return false;
+      if (!Array.isArray((g as Record<string, unknown>).filters)) return false;
+    }
+  }
+  if ("search" in v) {
+    const search = (v as Record<string, unknown>).search;
+    if (typeof search !== "object" || search === null) return false;
   }
   return true;
 }
@@ -979,6 +985,7 @@ export default function RequestBinPage(): React.ReactNode {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
   const tabContextMenuRef = useRef<HTMLDivElement>(null);
+  const dragCleanupRef = useRef<(() => void) | null>(null);
 
   // Load persisted state on mount
   useEffect(() => {
@@ -1008,6 +1015,7 @@ export default function RequestBinPage(): React.ReactNode {
 
     return () => {
       isMountedRef.current = false;
+      dragCleanupRef.current?.();
     };
   }, []);
 
@@ -1172,18 +1180,16 @@ export default function RequestBinPage(): React.ReactNode {
     }));
   }, []);
 
-  const addFilterGroup = useCallback(() => {
+  const addFilterGroup = useCallback((): string => {
+    const newId = generateFilterId();
     setFilterState((prev) => ({
       ...prev,
       groups: [
         ...prev.groups,
-        {
-          id: generateFilterId(),
-          logic: "OR" as const,
-          filters: [],
-        },
+        { id: newId, logic: "OR" as const, filters: [] },
       ],
     }));
+    return newId;
   }, []);
 
   const toggleGroupLogic = useCallback((groupId: string) => {
@@ -1424,6 +1430,13 @@ export default function RequestBinPage(): React.ReactNode {
 
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
+
+    dragCleanupRef.current = () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
   }, []);
 
   // --- Collapse handlers ---
@@ -1479,7 +1492,7 @@ export default function RequestBinPage(): React.ReactNode {
     const multipleGroups = filterState.groups.length > 1;
 
     filterState.groups.forEach((group, groupIdx) => {
-      // AND label between groups (top-level groups are always AND-joined)
+      // Logic label between groups (top-level groups are joined by filterState.logic)
       if (groupIdx > 0) {
         rows.push(
           <div key={`and-${group.id}`} className="rb-filter-row rb-filter-indent">
@@ -1672,9 +1685,9 @@ export default function RequestBinPage(): React.ReactNode {
           type="button"
           className="rb-filter-dropdown-item"
           onClick={() => {
-            addFilterGroup();
-            setFilterDropdownOpen(false);
-            setDropdownPosition(null);
+            const newId = addFilterGroup();
+            setAddingToGroupId(newId);
+            // Keep dropdown open so user can add a filter to the new group
           }}
         >
           <span>( ) Add filter group</span>
@@ -1685,17 +1698,12 @@ export default function RequestBinPage(): React.ReactNode {
             <button
               type="button"
               className="rb-filter-dropdown-item"
-              onMouseEnter={(e) => {
+              onMouseEnter={() => {
                 setActiveFieldMenu(ff.value);
                 setActiveOperatorMenu(null);
                 setPendingMethodSelections(new Set());
                 setPendingInputValue("");
                 setPendingInputValueTo("");
-                // Store the trigger rect for sub-menu positioning
-                const triggerRect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
-                (e.currentTarget as HTMLButtonElement).dataset.rectTop = String(triggerRect.top);
-                (e.currentTarget as HTMLButtonElement).dataset.rectRight = String(triggerRect.right);
-                (e.currentTarget as HTMLButtonElement).dataset.rectLeft = String(triggerRect.left);
               }}
             >
               <span>{ff.label}</span>
