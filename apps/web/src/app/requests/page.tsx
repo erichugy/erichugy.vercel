@@ -42,6 +42,7 @@ type FilterGroup = {
 };
 
 type FilterState = {
+  logic: "AND" | "OR";
   groups: FilterGroup[];
 };
 
@@ -62,6 +63,7 @@ type SavedView = {
   id: string;
   name: string;
   createdAt: string;
+  filterLogic: "AND" | "OR";
   filterGroups: FilterGroup[];
   search: SearchState;
 };
@@ -166,7 +168,7 @@ function generateFilterId(): string {
 }
 
 function createDefaultFilterState(): FilterState {
-  return { groups: [] };
+  return { logic: "AND", groups: [] };
 }
 
 function createDefaultSearch(): SearchState {
@@ -253,15 +255,19 @@ function matchesSingleFilter(req: CapturedRequest, f: SingleFilter): boolean {
 function matchesFilterState(req: CapturedRequest, state: FilterState): boolean {
   if (state.groups.length === 0) return true;
 
-  // All groups joined by AND
-  return state.groups.every((group) => {
+  const matchGroup = (group: FilterGroup): boolean => {
     if (group.filters.length === 0) return true;
     if (group.logic === "AND") {
       return group.filters.every((f) => matchesSingleFilter(req, f));
     }
-    // OR
     return group.filters.some((f) => matchesSingleFilter(req, f));
-  });
+  };
+
+  // NOTE: top-level logic determines how groups are joined
+  if (state.logic === "AND") {
+    return state.groups.every(matchGroup);
+  }
+  return state.groups.some(matchGroup);
 }
 
 function matchesSearch(req: CapturedRequest, search: SearchState): boolean {
@@ -606,9 +612,9 @@ const styles = `
   .rb-tab-context-menu button:hover { background: #f6f8fa; }
   .rb-tab-context-menu button.rb-danger { color: #cf222e; }
 
-  /* Filter area - vertical tree layout */
+  /* Filter area - compact vertical layout */
   .rb-filter-area {
-    padding: 8px 20px;
+    padding: 6px 20px;
     border-bottom: 1px solid #d0d7de;
     background: #ffffff;
     font-size: 13px;
@@ -617,47 +623,52 @@ const styles = `
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 4px;
   }
   .rb-filter-header-label {
     font-weight: 600;
-    color: #24292f;
-    font-size: 13px;
+    color: #656d76;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
   .rb-filter-tree {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
+    margin-top: 4px;
   }
   .rb-filter-row {
     display: flex;
     align-items: center;
     gap: 6px;
+    min-height: 26px;
   }
   .rb-filter-indent {
-    padding-left: 20px;
+    padding-left: 16px;
   }
   .rb-filter-indent-2 {
-    padding-left: 40px;
+    padding-left: 32px;
   }
   .rb-filter-add-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 4px;
     border: 1px dashed #d0d7de;
     background: none;
     cursor: pointer;
     color: #656d76;
-    font-size: 16px;
+    font-size: 14px;
     font-family: inherit;
+    line-height: 1;
     transition: all 0.1s;
   }
   .rb-filter-add-btn:hover {
     border-color: #0969da;
     color: #0969da;
+    background: #f0f7ff;
   }
   .rb-filter-btn {
     display: flex;
@@ -712,9 +723,9 @@ const styles = `
     padding: 2px 0;
   }
   .rb-group-bracket {
-    color: #656d76;
-    font-size: 16px;
-    font-weight: 300;
+    color: #b0b8c1;
+    font-size: 13px;
+    font-weight: 400;
     line-height: 1;
   }
   .rb-group-logic-toggle {
@@ -984,7 +995,7 @@ export default function RequestBinPage(): React.ReactNode {
       if (activeId !== "default") {
         const view = views.find((v) => v.id === activeId);
         if (view) {
-          setFilterState({ groups: view.filterGroups ?? [] });
+          setFilterState({ logic: view.filterLogic ?? "AND", groups: view.filterGroups ?? [] });
           setSearchState({
             query: view.search?.query ?? "",
             isRegex: Boolean(view.search?.isRegex),
@@ -1117,8 +1128,8 @@ export default function RequestBinPage(): React.ReactNode {
 
     setFilterState((prev) => {
       if (groupId !== null) {
-        // Add to existing group
         return {
+          ...prev,
           groups: prev.groups.map((g) =>
             g.id === groupId
               ? { ...g, filters: [...g.filters, newFilter] }
@@ -1127,12 +1138,12 @@ export default function RequestBinPage(): React.ReactNode {
         };
       }
 
-      // Add to first group, or create a new AND group
       if (prev.groups.length === 0) {
         return {
+          ...prev,
           groups: [{
             id: generateFilterId(),
-            logic: "AND",
+            logic: "AND" as const,
             filters: [newFilter],
           }],
         };
@@ -1140,6 +1151,7 @@ export default function RequestBinPage(): React.ReactNode {
 
       const first = prev.groups[0];
       return {
+        ...prev,
         groups: [
           { ...first, filters: [...first.filters, newFilter] },
           ...prev.groups.slice(1),
@@ -1149,24 +1161,25 @@ export default function RequestBinPage(): React.ReactNode {
   }, []);
 
   const removeFilter = useCallback((filterId: string) => {
-    setFilterState((prev) => {
-      const groups = prev.groups
+    setFilterState((prev) => ({
+      ...prev,
+      groups: prev.groups
         .map((g) => ({
           ...g,
           filters: g.filters.filter((f) => f.id !== filterId),
         }))
-        .filter((g) => g.filters.length > 0);
-      return { groups };
-    });
+        .filter((g) => g.filters.length > 0),
+    }));
   }, []);
 
   const addFilterGroup = useCallback(() => {
     setFilterState((prev) => ({
+      ...prev,
       groups: [
         ...prev.groups,
         {
           id: generateFilterId(),
-          logic: "OR",
+          logic: "OR" as const,
           filters: [],
         },
       ],
@@ -1175,11 +1188,19 @@ export default function RequestBinPage(): React.ReactNode {
 
   const toggleGroupLogic = useCallback((groupId: string) => {
     setFilterState((prev) => ({
+      ...prev,
       groups: prev.groups.map((g) =>
         g.id === groupId
-          ? { ...g, logic: g.logic === "AND" ? "OR" : "AND" }
+          ? { ...g, logic: g.logic === "AND" ? "OR" as const : "AND" as const }
           : g
       ),
+    }));
+  }, []);
+
+  const toggleTopLevelLogic = useCallback(() => {
+    setFilterState((prev) => ({
+      ...prev,
+      logic: prev.logic === "AND" ? "OR" : "AND",
     }));
   }, []);
 
@@ -1245,6 +1266,7 @@ export default function RequestBinPage(): React.ReactNode {
       id: crypto.randomUUID(),
       name,
       createdAt: new Date().toISOString(),
+      filterLogic: filterState.logic,
       filterGroups: filterState.groups,
       search: searchState,
     };
@@ -1302,7 +1324,7 @@ export default function RequestBinPage(): React.ReactNode {
     const view = savedViews.find((v) => v.id === viewId);
     if (!view) return;
 
-    setFilterState({ groups: view.filterGroups ?? [] });
+    setFilterState({ logic: view.filterLogic ?? "AND", groups: view.filterGroups ?? [] });
     setSearchState({
       query: view.search?.query ?? "",
       isRegex: Boolean(view.search?.isRegex),
@@ -1461,7 +1483,14 @@ export default function RequestBinPage(): React.ReactNode {
       if (groupIdx > 0) {
         rows.push(
           <div key={`and-${group.id}`} className="rb-filter-row rb-filter-indent">
-            <span className="rb-filter-logic-label">AND</span>
+            <button
+              type="button"
+              className="rb-group-logic-toggle"
+              onClick={toggleTopLevelLogic}
+              title={`Click to toggle ${filterState.logic === "AND" ? "OR" : "AND"}`}
+            >
+              {filterState.logic}
+            </button>
           </div>,
         );
       }
