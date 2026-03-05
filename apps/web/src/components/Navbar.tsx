@@ -57,8 +57,13 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {/* Mobile: Right - Hamburger | Desktop: Right (empty) */}
-          <div className="flex items-center justify-self-end md:justify-self-end">
+          {/* Mobile: Right - Hamburger | Desktop: Right - Theme Toggle */}
+          <div className="flex items-center justify-self-end gap-4">
+            {/* Desktop theme toggle - hidden on mobile */}
+            <div className="hidden md:flex">
+              <ThemeToggle />
+            </div>
+
             {/* Mobile hamburger button */}
             <button
               type="button"
