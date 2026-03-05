@@ -1,12 +1,17 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 import { NAV_LINKS } from "@/lib/constants";
 
-import ThemeToggle from "./ThemeToggle";
 import MobileNavigation from "./MobileNavigation";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <>
       <header className="bg-page/95 backdrop-blur-sm border-b border-border/40 sticky top-0 z-50">
@@ -35,12 +40,58 @@ export default function Navbar() {
             ))}
           </ul>
 
-          <div className="justify-self-end">
+          <div className="flex items-center justify-self-end gap-4">
+            {/* Mobile hamburger button */}
+            <button
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isOpen}
+              className="md:hidden flex flex-col items-center justify-center w-9 h-9 rounded-[10px] border border-border text-body hover:text-heading hover:border-accent/50 transition-all"
+            >
+              {isOpen ? (
+                // X icon
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              ) : (
+                // Hamburger icon
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              )}
+            </button>
+
             <ThemeToggle />
           </div>
         </nav>
       </header>
-      <MobileNavigation />
+
+      {/* Mobile Navigation Drawer */}
+      <MobileNavigation isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </>
   );
 }
