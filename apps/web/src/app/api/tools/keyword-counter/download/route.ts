@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { getKeywordCounterJob } from "@/lib/keyword-counter-jobs";
+import { getKeywordCounterJob } from "@/lib/botpress/keyword-counter-jobs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
