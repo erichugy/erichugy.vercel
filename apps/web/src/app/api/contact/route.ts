@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const contactBodySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(200),
-  email: z.email("Invalid email address").max(200),
+  email: z.email("Invalid email address").max(254),
   message: z.string().trim().min(1, "Message is required").max(2000),
 });
 

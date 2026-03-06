@@ -185,9 +185,13 @@ export default function RequestBinPage() {
   }, [fetchRequests]);
 
   const handleClear = async () => {
-    await axios.delete("/api/requests");
-    setRequests([]);
-    setSelectedIndex(0);
+    try {
+      await axios.delete("/api/requests");
+      setRequests([]);
+      setSelectedIndex(0);
+    } catch {
+      // silently ignore delete errors
+    }
   };
 
   const selected = requests[selectedIndex] ?? null;

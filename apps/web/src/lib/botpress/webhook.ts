@@ -10,15 +10,6 @@ export const webhookBaseSchema = z.object({
   key: z.string().min(1, "Webhook key is required"),
 });
 
-/** Contact form webhook payload */
-export const contactWebhookSchema = webhookBaseSchema.extend({
-  name: z.string().trim().min(1, "Name is required").max(200),
-  email: z.email("Invalid email address").max(200),
-  message: z.string().trim().min(1, "Message is required").max(2000),
-});
-
-export type ContactWebhookPayload = z.infer<typeof contactWebhookSchema>;
-
 /**
  * Send a payload to the Botpress webhook.
  */
@@ -32,5 +23,6 @@ export async function sendWebhook<T extends z.infer<typeof webhookBaseSchema>>(
     headers: { "Content-Type": "application/json" },
     timeout: timeoutMs,
     signal,
+    "axios-retry": { retries: 0 },
   });
 }
