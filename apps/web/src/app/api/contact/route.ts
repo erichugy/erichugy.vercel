@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
+import axios from "@/lib/axios";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -111,26 +113,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: firstError }, { status: 400 });
   }
 
-  let timeout: ReturnType<typeof setTimeout> | undefined;
   try {
-    const controller = new AbortController();
-    timeout = setTimeout(() => controller.abort(), 10_000);
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(parsed.data),
-      signal: controller.signal,
-    });
-    if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
+    await axios.post(webhookUrl, parsed.data, { timeout: 10_000 });
   } catch {
     return NextResponse.json(
       { error: "Failed to send message. Please try again." },
       { status: 500 },
     );
-  } finally {
-    if (timeout !== undefined) {
-      clearTimeout(timeout);
-    }
   }
 
   return NextResponse.json({ success: true });

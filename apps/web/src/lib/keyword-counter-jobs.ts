@@ -1,3 +1,4 @@
+import axios, { type AxiosError } from "axios";
 import { randomUUID } from "node:crypto";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
@@ -262,34 +263,32 @@ function buildSummaryText(summary: SummaryResult) {
 }
 
 async function requestJson(url: string, headers: Record<string, string>) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
   try {
-    const response = await fetch(url, {
-      method: "GET",
+    const response = await axios.get(url, {
       headers,
-      signal: controller.signal,
-      cache: "no-store",
+      timeout: REQUEST_TIMEOUT_MS,
     });
-    const body = await response.text();
-
-    if (!response.ok) {
-      const err = new Error(`HTTP ${response.status}`) as Error & {
-        response?: { status: number; body: string; headers: Headers };
+    return response.data;
+  } catch (cause) {
+    const axiosErr = cause as AxiosError;
+    const err = new Error(`HTTP ${axiosErr.response?.status ?? 0}`) as Error & {
+      response?: { status: number; body: string; headers: Record<string, string> };
+    };
+    if (axiosErr.response) {
+      err.response = {
+        status: axiosErr.response.status,
+        body: typeof axiosErr.response.data === "string"
+          ? axiosErr.response.data
+          : JSON.stringify(axiosErr.response.data),
+        headers: axiosErr.response.headers as Record<string, string>,
       };
-      err.response = { status: response.status, body, headers: response.headers };
-      throw err;
     }
-
-    return JSON.parse(body);
-  } finally {
-    clearTimeout(timeout);
+    throw err;
   }
 }
 
-function parseRetrySeconds(headers: Headers, attempt: number) {
-  const retryAfter = headers.get("retry-after");
+function parseRetrySeconds(headers: Record<string, string>, attempt: number) {
+  const retryAfter = headers["retry-after"];
   if (retryAfter) {
     const parsed = Number(retryAfter);
     if (!Number.isNaN(parsed) && parsed >= 0) {
@@ -297,7 +296,7 @@ function parseRetrySeconds(headers: Headers, attempt: number) {
     }
   }
 
-  const rateLimitReset = headers.get("ratelimit-reset");
+  const rateLimitReset = headers["ratelimit-reset"];
   if (rateLimitReset) {
     const parsed = Number(rateLimitReset);
     if (!Number.isNaN(parsed) && parsed >= 0) {
@@ -338,7 +337,7 @@ async function fetchMessagesPage(params: {
       return await requestJson(url.toString(), headers);
     } catch (cause) {
       const error = cause as Error & {
-        response?: { status: number; body: string; headers: Headers };
+        response?: { status: number; body: string; headers: Record<string, string> };
       };
       const status = error.response?.status ?? 0;
       const retryable = status === 429 || (status >= 500 && status < 600) || status === 0;
@@ -348,7 +347,7 @@ async function fetchMessagesPage(params: {
         throw new Error(`API request failed after retries: ${body}`, { cause });
       }
 
-      const waitSeconds = parseRetrySeconds(error.response?.headers ?? new Headers(), attempt);
+      const waitSeconds = parseRetrySeconds(error.response?.headers ?? {}, attempt);
       const jitter = Math.min(0.25 * attempt, 2);
       await sleep(Math.round((waitSeconds + jitter) * 1000));
     }

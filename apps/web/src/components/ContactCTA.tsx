@@ -1,6 +1,9 @@
 "use client";
 
+import { type AxiosError } from "axios";
 import { useState, type FormEvent } from "react";
+
+import axios from "@/lib/axios";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -23,24 +26,15 @@ export default function ContactCTA() {
     setStatus("sending");
     setErrorMsg(null);
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        if (res.status === 429) {
-          setErrorMsg("Too many messages sent. Please try again later.");
-        } else {
-          setErrorMsg(body?.error || "Something went wrong. Please try again.");
-        }
-        setStatus("error");
-        return;
-      }
+      await axios.post("/api/contact", { name, email, message });
       setStatus("success");
-    } catch {
-      setErrorMsg("Something went wrong. Please try again.");
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: string }>;
+      if (axiosErr.response?.status === 429) {
+        setErrorMsg("Too many messages sent. Please try again later.");
+      } else {
+        setErrorMsg(axiosErr.response?.data?.error || "Something went wrong. Please try again.");
+      }
       setStatus("error");
     }
   }
