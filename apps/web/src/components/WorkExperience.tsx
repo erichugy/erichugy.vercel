@@ -139,9 +139,11 @@ export default function WorkExperience() {
               return (
                 <div key={index}>
                   {/* Mobile layout: date + dot row, then card */}
-                  <div className="md:hidden">
-                    <div className="mb-2 flex items-center gap-3">
+                  <div className="md:hidden relative pl-10">
+                    <div className="absolute left-0 top-[36px]">
                       <TimelineDot isExpanded={isExpanded} bg="bg-page-alt" />
+                    </div>
+                    <div className="mb-2 pt-0.5">
                       <span className="font-mono text-xs text-muted">
                         {exp.duration}
                       </span>
