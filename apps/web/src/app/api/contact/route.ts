@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import axios from "@/lib/axios";
+import { sendWebhook } from "@/lib/webhook";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    await axios.post(webhookUrl, parsed.data, { timeout: 10_000 });
+    await sendWebhook(webhookUrl, { key: "contact-form", ...parsed.data });
   } catch {
     return NextResponse.json(
       { error: "Failed to send message. Please try again." },
