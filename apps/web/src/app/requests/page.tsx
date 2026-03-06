@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import type { CapturedRequest } from "@/lib/requestBinStore";
+import axios from "@/lib/axios";
+import type { CapturedRequest } from "@/lib/request-bin-store";
 
 function escapeHtml(str: string): string {
   return str
@@ -171,12 +172,12 @@ export default function RequestBinPage() {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const fetchRequests = useCallback(async () => {
-    const res = await fetch("/api/requests");
-    if (!res.ok) {
-      return;
+    try {
+      const res = await axios.get<CapturedRequest[]>("/api/requests");
+      setRequests(res.data);
+    } catch {
+      // silently ignore fetch errors
     }
-    const data: CapturedRequest[] = await res.json();
-    setRequests(data);
   }, []);
 
   useEffect(() => {
@@ -184,7 +185,7 @@ export default function RequestBinPage() {
   }, [fetchRequests]);
 
   const handleClear = async () => {
-    await fetch("/api/requests", { method: "DELETE" });
+    await axios.delete("/api/requests");
     setRequests([]);
     setSelectedIndex(0);
   };
