@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createKeywordCounterJob, getKeywordCounterJob } from "@/lib/keywordCounterJobs";
+import { createKeywordCounterJob, getKeywordCounterJob } from "@/lib/botpress/keyword-counter-jobs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
