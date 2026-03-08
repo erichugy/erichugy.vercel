@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 
-import { type SheetConfig } from "@/services/google-sheets/types";
 import { appendRow, deleteRow, getRows, updateRow } from "@/services/google-sheets";
+import { type SheetConfig } from "@/services/google-sheets/types";
+
 import { jobRowSchema, type JobRow } from "./types";
 
 const COLUMNS = [

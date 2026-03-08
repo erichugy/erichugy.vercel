@@ -7,8 +7,6 @@ import path from "node:path";
 import type {
   KeywordCounterInput,
   KeywordCounterJob,
-  KeywordCounterStatus,
-  MessageMatchRow,
   SummaryResult,
 } from "./types";
 

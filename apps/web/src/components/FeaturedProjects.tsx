@@ -49,18 +49,8 @@ export default function FeaturedProjects(): React.JSX.Element | null {
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [isPaused, setIsPaused] = useState<boolean>(false);
 
-  if (!SHOW_FEATURED_PROJECTS) {
-    return (
-      <section id="portfolio" className="px-6 py-20 md:py-28 bg-page">
-        <div className="max-w-7xl mx-auto">
-          <WorkInProgress />
-        </div>
-      </section>
-    );
-  }
-
   useEffect(() => {
-    if (isPaused) {
+    if (!SHOW_FEATURED_PROJECTS || isPaused) {
       return;
     }
 
@@ -74,6 +64,16 @@ export default function FeaturedProjects(): React.JSX.Element | null {
       window.clearInterval(intervalId);
     };
   }, [isPaused]);
+
+  if (!SHOW_FEATURED_PROJECTS) {
+    return (
+      <section id="portfolio" className="px-6 py-20 md:py-28 bg-page">
+        <div className="max-w-7xl mx-auto">
+          <WorkInProgress />
+        </div>
+      </section>
+    );
+  }
 
   const goToPreviousProject = (): void => {
     setActiveIndex(
