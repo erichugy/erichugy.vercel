@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import axios from "@/lib/axios";
+import axios from "@/services/axios";
 
 /**
  * Base schema for all Botpress webhook payloads.

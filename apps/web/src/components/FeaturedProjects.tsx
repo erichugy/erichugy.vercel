@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { SHOW_FEATURED_PROJECTS } from "@/lib/feature-flags";
+import { SHOW_FEATURED_PROJECTS } from "@/config/feature-flags";
 
 import WorkInProgress from "./WorkInProgress";
 

@@ -3,7 +3,7 @@
 import { type AxiosError } from "axios";
 import { useState, type FormEvent } from "react";
 
-import axios from "@/lib/axios";
+import axios from "@/services/axios";
 
 type Status = "idle" | "sending" | "success" | "error";
 

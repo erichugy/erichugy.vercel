@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { clearRequests, getRequests } from "@/lib/request-bin-store";
+import { clearRequests, getRequests } from "@/tools/request-bin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

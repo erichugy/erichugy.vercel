@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
+import { NAV_LINKS, SOCIAL_LINKS } from "@/data/navigation";
 
 const SOCIAL_ICONS: Record<string, ReactNode> = {
   in: (

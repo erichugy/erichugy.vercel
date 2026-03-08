@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-import { NAV_LINKS } from "@/lib/constants";
+import { NAV_LINKS } from "@/data/navigation";
 
 type MobileNavigationProps = {
   isOpen: boolean;

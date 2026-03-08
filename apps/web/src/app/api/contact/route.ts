@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { sendWebhook } from "@/lib/botpress/webhook";
+import { sendWebhook } from "@/services/botpress/webhook";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
