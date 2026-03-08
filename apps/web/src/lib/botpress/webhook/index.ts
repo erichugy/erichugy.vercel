@@ -1,19 +1,11 @@
-import { z } from "zod";
-
 import axios from "@/lib/axios";
 
-/**
- * Base schema for all Botpress webhook payloads.
- * Every webhook call must include a `key` field to identify the event type.
- */
-export const webhookBaseSchema = z.object({
-  key: z.string().min(1, "Webhook key is required"),
-});
+import { type WebhookBaseSchema } from "./types";
 
 /**
  * Send a payload to the Botpress webhook.
  */
-export async function sendWebhook<T extends z.infer<typeof webhookBaseSchema>>(
+export async function sendWebhook<T extends WebhookBaseSchema>(
   webhookUrl: string,
   payload: T,
   options?: { timeoutMs?: number; signal?: AbortSignal },

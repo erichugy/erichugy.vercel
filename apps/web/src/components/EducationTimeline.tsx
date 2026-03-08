@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { EDUCATION_ENTRIES } from "@/lib/about-data";
 import { SHOW_DATES } from "@/lib/feature-flags";
 

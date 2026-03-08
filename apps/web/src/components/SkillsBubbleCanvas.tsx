@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+
 import { TECHNICAL_SKILLS } from "@/lib/about-data";
 import {
   SKILL_ICONS,

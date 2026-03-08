@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { type WorkExperience as WorkExp, WORK_EXPERIENCES } from "@/lib/about-data";
 
 function ChevronIcon({ expanded }: { expanded: boolean }) {
