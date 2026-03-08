@@ -5,6 +5,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 import axios from "@/lib/axios";
+import { formatBytes } from "@/utils/format";
 
 const jobResponseSchema = z.object({
   id: z.string(),
@@ -36,16 +37,6 @@ const jobResponseSchema = z.object({
 });
 
 type JobResponse = z.infer<typeof jobResponseSchema>;
-
-function formatBytes(bytes: number) {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 export default function KeywordCounterTool() {
   const [pat, setPat] = useState("");
