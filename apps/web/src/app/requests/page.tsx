@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import axios from "@/lib/axios";
-import type { CapturedRequest } from "@/lib/request-bin-store";
+import axios from "@/services/axios";
+import type { CapturedRequest } from "@/tools/request-bin";
 
 function escapeHtml(str: string): string {
   return str

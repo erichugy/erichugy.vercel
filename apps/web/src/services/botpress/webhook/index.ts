@@ -1,4 +1,4 @@
-import axios from "@/lib/axios";
+import axios from "@/services/axios";
 
 import { type WebhookBaseSchema } from "./types";
 

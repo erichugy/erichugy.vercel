@@ -1,4 +1,4 @@
-import { ACTIVITIES } from "@/lib/about-data";
+import { ACTIVITIES } from "@/data/about";
 
 export default function Activities() {
   return (

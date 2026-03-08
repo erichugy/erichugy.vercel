@@ -5,8 +5,8 @@ import Navbar from "@/components/Navbar";
 import SkillsBubbleCanvas from "@/components/SkillsBubbleCanvas";
 import TechSkills from "@/components/TechSkills";
 import WorkExperience from "@/components/WorkExperience";
-import { CERTIFICATIONS, LANGUAGES } from "@/lib/about-data";
-import { SHOW_ACTIVITIES, SHOW_DATES } from "@/lib/feature-flags";
+import { CERTIFICATIONS, LANGUAGES } from "@/data/about";
+import { SHOW_ACTIVITIES, SHOW_DATES } from "@/config/feature-flags";
 
 export const metadata = {
   title: "About Me | Eric Huang",

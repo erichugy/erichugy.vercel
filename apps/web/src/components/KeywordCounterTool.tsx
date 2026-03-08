@@ -4,7 +4,7 @@ import { type AxiosError } from "axios";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
-import axios from "@/lib/axios";
+import axios from "@/services/axios";
 
 const jobResponseSchema = z.object({
   id: z.string(),

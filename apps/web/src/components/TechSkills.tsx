@@ -1,11 +1,11 @@
 "use client";
 
-import { TECHNICAL_SKILLS } from "@/lib/about-data";
+import { TECHNICAL_SKILLS } from "@/data/about";
 import {
   SKILL_ICONS,
   SKILL_COLORS,
   CATEGORY_LABELS,
-} from "@/lib/skill-metadata";
+} from "@/data/skills";
 
 export default function TechSkills() {
   return (

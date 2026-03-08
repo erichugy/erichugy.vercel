@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { NAV_LINKS } from "@/lib/constants";
+import { NAV_LINKS } from "@/data/navigation";
 
 import MobileNavigation from "./MobileNavigation";
 import ThemeToggle from "./ThemeToggle";
