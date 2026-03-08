@@ -26,7 +26,7 @@ export const educationEntrySchema = z.object({
   awards: z.array(z.string()).optional(),
   coursework: z.array(z.string()).optional(),
   clubs: z.array(z.string()).optional(),
-  volunteer: z.array(z.lazy(() => volunteerEntrySchema)).optional(),
+  volunteer: z.array(volunteerEntrySchema).optional(),
 });
 export type EducationEntry = z.infer<typeof educationEntrySchema>;
 
