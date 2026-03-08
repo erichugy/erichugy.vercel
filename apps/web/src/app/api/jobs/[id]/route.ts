@@ -9,15 +9,19 @@ export const dynamic = "force-dynamic";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
-const updateJobSchema = z.object({
-  jobTitle: z.string().trim().min(1).max(500).optional(),
-  company: z.string().trim().min(1).max(300).optional(),
-  jobDescription: z.string().trim().max(10000).optional(),
-  datePosted: z.string().trim().optional(),
-  dateApplied: z.string().trim().optional(),
-  location: z.string().trim().max(300).optional(),
-  link: z.string().trim().max(2000).optional(),
-});
+const updateJobSchema = z
+  .object({
+    jobTitle: z.string().trim().min(1).max(500).optional(),
+    company: z.string().trim().min(1).max(300).optional(),
+    jobDescription: z.string().trim().max(10000).optional(),
+    datePosted: z.string().trim().optional(),
+    dateApplied: z.string().trim().optional(),
+    location: z.string().trim().max(300).optional(),
+    link: z.string().trim().max(2000).optional(),
+  })
+  .refine((obj) => Object.keys(obj).length > 0, {
+    message: "At least one field is required.",
+  });
 
 export async function GET(
   req: NextRequest,

@@ -1,7 +1,6 @@
 import { type SheetConfig } from "@/services/google-sheets/types";
 import { appendRow, deleteRow, getRows, updateRow } from "@/services/google-sheets";
-
-import { type JobRow } from "./types";
+import { jobRowSchema, type JobRow } from "./types";
 
 const COLUMNS = [
   "id",
@@ -23,17 +22,11 @@ function getConfig(): SheetConfig {
   };
 }
 
-function rowToJob(row: string[]): JobRow {
-  return {
-    id: row[0] ?? "",
-    jobTitle: row[1] ?? "",
-    company: row[2] ?? "",
-    jobDescription: row[3] ?? "",
-    datePosted: row[4] ?? "",
-    dateApplied: row[5] ?? "",
-    location: row[6] ?? "",
-    link: row[7] ?? "",
-  };
+function rowToJob(row: unknown[]): JobRow {
+  const raw = Object.fromEntries(
+    COLUMNS.map((col, i) => [col, String(row[i] ?? "")]),
+  );
+  return jobRowSchema.parse(raw);
 }
 
 function jobToRow(job: JobRow): string[] {
@@ -57,11 +50,14 @@ export async function appendJob(job: Omit<JobRow, "id">): Promise<JobRow> {
   return fullJob;
 }
 
+// NOTE: findRowNumber + subsequent mutation is not atomic — concurrent
+// requests can shift row numbers between lookup and write. Acceptable
+// for a low-traffic personal tool; use a real database if this matters.
 async function findRowNumber(id: string): Promise<number | null> {
   const rows = await getRows(getConfig(), "A:A");
-  // Row 0 in values = row 1 in sheet (header), so data starts at index 1
+  // Skip header row (index 0); return 1-indexed sheet row number
   for (let i = 1; i < rows.length; i++) {
-    if (rows[i]?.[0] === id) return i + 1; // 1-indexed sheet row
+    if (rows[i]?.[0] === id) return i + 1;
   }
   return null;
 }

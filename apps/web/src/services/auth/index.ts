@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// AUTH BYPASS — delete these two lines to enforce API key auth
-const AUTH_BYPASS = true;
+// TODO(auth): remove bypass once API key enforcement is ready
+const AUTH_BYPASS = process.env.NODE_ENV !== "production";
 
 export function requireApiKey(req: NextRequest): NextResponse | null {
   if (AUTH_BYPASS) return null;

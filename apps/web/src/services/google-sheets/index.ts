@@ -27,13 +27,13 @@ function getClient() {
 export async function getRows(
   config: SheetConfig,
   range: string,
-): Promise<string[][]> {
+): Promise<unknown[][]> {
   const sheets = getClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
     range: `${config.tabName}!${range}`,
   });
-  return (res.data.values as string[][] | undefined) ?? [];
+  return (res.data.values as unknown[][] | undefined) ?? [];
 }
 
 export async function appendRow(
@@ -77,7 +77,9 @@ export async function deleteRow(
   const sheet = spreadsheet.data.sheets?.find(
     (s) => s.properties?.title === config.tabName,
   );
-  const numericSheetId = sheet?.properties?.sheetId ?? 0;
+  if (!sheet) {
+    throw new Error(`Sheet tab "${config.tabName}" not found`);
+  }
 
   await sheets.spreadsheets.batchUpdate({
     spreadsheetId: config.spreadsheetId,
@@ -86,9 +88,9 @@ export async function deleteRow(
         {
           deleteDimension: {
             range: {
-              sheetId: numericSheetId,
+              sheetId: sheet.properties!.sheetId!,
               dimension: "ROWS",
-              startIndex: rowIndex - 1, // convert 1-indexed to 0-indexed
+              startIndex: rowIndex - 1,
               endIndex: rowIndex,
             },
           },
