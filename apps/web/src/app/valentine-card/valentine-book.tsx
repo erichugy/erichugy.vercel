@@ -2,20 +2,22 @@
 
 import NextImage from "next/image";
 import { useEffect, useState } from "react";
+import { z } from "zod";
 
 import styles from "./valentine-card.module.css";
 
-type CardPage = {
-  body: string;
-  id: string;
-  leftPage?: {
-    fit?: "contain" | "cover";
-    imageSrc?: string;
-    position?: string;
-  };
-  role: "cover" | "inside" | "end";
-  title: string;
-};
+const _cardPageSchema = z.object({
+  body: z.string(),
+  id: z.string(),
+  leftPage: z.object({
+    fit: z.enum(["contain", "cover"]).optional(),
+    imageSrc: z.string().optional(),
+    position: z.string().optional(),
+  }).optional(),
+  role: z.enum(["cover", "inside", "end"]),
+  title: z.string(),
+});
+type CardPage = z.infer<typeof _cardPageSchema>;
 
 const CARD_PAGES: CardPage[] = [
   {
