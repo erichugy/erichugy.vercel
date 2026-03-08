@@ -22,9 +22,9 @@ function getConfig(): SheetConfig {
   };
 }
 
-function rowToJob(row: unknown[]): JobRow {
+function rowToJob(row: string[]): JobRow {
   const raw = Object.fromEntries(
-    COLUMNS.map((col, i) => [col, String(row[i] ?? "")]),
+    COLUMNS.map((col, i) => [col, row[i] ?? ""]),
   );
   return jobRowSchema.parse(raw);
 }

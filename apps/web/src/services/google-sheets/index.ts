@@ -1,4 +1,5 @@
 import { google } from "googleapis";
+import { z } from "zod";
 
 import { type SheetConfig } from "./types";
 
@@ -24,16 +25,19 @@ function getClient() {
   return google.sheets({ version: "v4", auth: getAuth() });
 }
 
+// Validates the raw API response shape before returning typed rows
+const sheetsValuesSchema = z.array(z.array(z.coerce.string())).default([]);
+
 export async function getRows(
   config: SheetConfig,
   range: string,
-): Promise<unknown[][]> {
+): Promise<string[][]> {
   const sheets = getClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
     range: `${config.tabName}!${range}`,
   });
-  return (res.data.values as unknown[][] | undefined) ?? [];
+  return sheetsValuesSchema.parse(res.data.values);
 }
 
 export async function appendRow(
@@ -64,6 +68,13 @@ export async function updateRow(
   });
 }
 
+const sheetPropertiesSchema = z.object({
+  properties: z.object({
+    sheetId: z.number(),
+    title: z.string(),
+  }),
+});
+
 export async function deleteRow(
   config: SheetConfig,
   rowIndex: number,
@@ -74,8 +85,12 @@ export async function deleteRow(
     spreadsheetId: config.spreadsheetId,
   });
 
-  const sheet = spreadsheet.data.sheets?.find(
-    (s) => s.properties?.title === config.tabName,
+  const validSheets = z
+    .array(sheetPropertiesSchema)
+    .parse(spreadsheet.data.sheets ?? []);
+
+  const sheet = validSheets.find(
+    (s) => s.properties.title === config.tabName,
   );
   if (!sheet) {
     throw new Error(`Sheet tab "${config.tabName}" not found`);
@@ -88,7 +103,7 @@ export async function deleteRow(
         {
           deleteDimension: {
             range: {
-              sheetId: sheet.properties!.sheetId!,
+              sheetId: sheet.properties.sheetId,
               dimension: "ROWS",
               startIndex: rowIndex - 1,
               endIndex: rowIndex,
