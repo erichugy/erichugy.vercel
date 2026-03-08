@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import { EDUCATION_ENTRIES } from "@/data/about";
 import { SHOW_DATES } from "@/config/feature-flags";
+import { EDUCATION_ENTRIES } from "@/data/about";
 
 function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
