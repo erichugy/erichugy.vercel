@@ -1,9 +1,13 @@
-import { google } from "googleapis";
+import { google, type sheets_v4 } from "googleapis";
 import { z } from "zod";
 
 import { type SheetConfig } from "./types";
 
-function getAuth() {
+let cachedClient: sheets_v4.Sheets | null = null;
+
+function getClient(): sheets_v4.Sheets {
+  if (cachedClient) return cachedClient;
+
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const key = process.env.GOOGLE_PRIVATE_KEY;
 
@@ -11,7 +15,7 @@ function getAuth() {
     throw new Error("Google Sheets credentials not configured");
   }
 
-  return new google.auth.GoogleAuth({
+  const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: email,
       // Vercel stores the key with literal \n — convert to real newlines
@@ -19,13 +23,15 @@ function getAuth() {
     },
     scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
+
+  cachedClient = google.sheets({ version: "v4", auth });
+  return cachedClient;
 }
 
-function getClient() {
-  return google.sheets({ version: "v4", auth: getAuth() });
+function a1Range(tabName: string, range: string): string {
+  return `'${tabName.replace(/'/g, "''")}'!${range}`;
 }
 
-// Validates the raw API response shape before returning typed rows
 const sheetsValuesSchema = z.array(z.array(z.coerce.string())).default([]);
 
 export async function getRows(
@@ -35,7 +41,7 @@ export async function getRows(
   const sheets = getClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
-    range: `${config.tabName}!${range}`,
+    range: a1Range(config.tabName, range),
   });
   return sheetsValuesSchema.parse(res.data.values);
 }
@@ -48,7 +54,7 @@ export async function appendRow(
   const sheets = getClient();
   await sheets.spreadsheets.values.append({
     spreadsheetId: config.spreadsheetId,
-    range: `${config.tabName}!${range}`,
+    range: a1Range(config.tabName, range),
     valueInputOption: "RAW",
     requestBody: { values: [values] },
   });
@@ -62,7 +68,7 @@ export async function updateRow(
   const sheets = getClient();
   await sheets.spreadsheets.values.update({
     spreadsheetId: config.spreadsheetId,
-    range: `${config.tabName}!${range}`,
+    range: a1Range(config.tabName, range),
     valueInputOption: "RAW",
     requestBody: { values: [values] },
   });

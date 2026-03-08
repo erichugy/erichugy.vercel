@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { type SheetConfig } from "@/services/google-sheets/types";
 import { appendRow, deleteRow, getRows, updateRow } from "@/services/google-sheets";
 import { jobRowSchema, type JobRow } from "./types";
@@ -51,7 +53,7 @@ export async function getJobById(id: string): Promise<JobRow | null> {
 }
 
 export async function appendJob(job: Omit<JobRow, "id">): Promise<JobRow> {
-  const id = crypto.randomUUID();
+  const id = randomUUID();
   const fullJob: JobRow = { id, ...job };
   await appendRow(getConfig(), "A:H", jobToRow(fullJob));
   return fullJob;
