@@ -1,46 +1,67 @@
 export interface Project {
   title: string;
   description: string;
+  longDescription: string;
   image: string;
+  techStack: string[];
   primaryCtaLabel: string;
   primaryCtaHref: string;
-  secondaryCtaLabel: string;
-  secondaryCtaHref: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaHref?: string;
   imageBackgroundClassName: string;
+  emoji?: string;
+  featured?: boolean;
 }
 
 export const PROJECTS: readonly Project[] = [
   {
-    title: "Business Website",
+    title: "Turing Poker Bot",
     description:
-      "A professional website designed for a growing company to showcase their services and connect with customers.",
+      "An autonomous Texas Hold'em poker bot built for the McGill Physics Hackathon.",
+    longDescription:
+      "Developed for the McGill Physics Hackathon/Tournament, this poker bot plays Texas Hold'em autonomously. The core logic involves real-time calculation of Expected Value (EV) by analyzing pot odds, estimating opponent hand ranges, and simulating win probabilities. To handle dynamic opponents, it uses an adaptive strategy with moving averages of opponent actions to model their aggression and looseness, shifting between conservative and aggressive playstyles based on table dynamics. Successfully competed against other student-made agents, qualifying for cash prizes in two separate rounds.",
     image: "/inspiration.png",
-    primaryCtaLabel: "Visit Site",
-    primaryCtaHref: "/projects",
-    secondaryCtaLabel: "View Code",
-    secondaryCtaHref: "/projects",
-    imageBackgroundClassName: "bg-[#F1E4C8]",
+    techStack: [
+      "Python",
+      "Probability Theory",
+      "Game Theory",
+      "Monte Carlo Simulation",
+    ],
+    primaryCtaLabel: "View on GitHub",
+    primaryCtaHref: "https://github.com/denis-tsariov/python-poker-bot",
+    imageBackgroundClassName:
+      "bg-gradient-to-br from-emerald-500/80 to-cyan-600/80",
+    emoji: "\uD83C\uDCCF",
+    featured: true,
   },
   {
-    title: "E-commerce Site",
+    title: "Stock Sentiment Analyzer",
     description:
-      "A fully functional online store built for a fashion brand with seamless checkout and inventory management.",
+      "A hackathon project that fetches news and runs NLP sentiment analysis to generate stock recommendations.",
+    longDescription:
+      "Built at McHacks 10, this tool fetches the latest news articles via the Alpaca Markets API, runs them through Cohere's NLP model to evaluate sentiment, then generates a BUY, SELL, or HOLD recommendation with a confidence score. Features a live demo with real-time analysis.",
     image: "/inspiration.png",
-    primaryCtaLabel: "Shop Demo",
-    primaryCtaHref: "/projects",
+    techStack: ["Python", "Flask", "Cohere", "Alpaca API", "BeautifulSoup"],
+    primaryCtaLabel: "Try Live Demo",
+    primaryCtaHref: "/projects/trading-bot",
     secondaryCtaLabel: "View Code",
-    secondaryCtaHref: "/projects",
-    imageBackgroundClassName: "bg-[#DCEAF4]",
+    secondaryCtaHref: "https://github.com/erichugy/",
+    imageBackgroundClassName:
+      "bg-gradient-to-br from-violet-500/80 to-fuchsia-600/80",
+    emoji: "\uD83D\uDCC8",
   },
   {
-    title: "Portfolio Website",
+    title: "Distributed RL Path-Finding",
     description:
-      "A creative and visually appealing portfolio website for a photographer to display their work.",
+      "Research on distributed deep reinforcement learning for path-finding in dynamic environments.",
+    longDescription:
+      "Architected a distributed path-finding system using IMPALA and RLlib, proposing a hybrid A*/RL framework for global navigation with local collision avoidance. Developed a 'Revolving Mini-Batch' training strategy that eliminated catastrophic forgetting and enabled generalization across distinct obstacle layouts. Conducted as research at McGill University.",
     image: "/inspiration.png",
-    primaryCtaLabel: "View Project",
-    primaryCtaHref: "/projects",
-    secondaryCtaLabel: "View Code",
-    secondaryCtaHref: "/projects",
-    imageBackgroundClassName: "bg-[#E8E0F1]",
+    techStack: ["Python", "PyTorch", "RLlib", "IMPALA", "A3C"],
+    primaryCtaLabel: "View Report",
+    primaryCtaHref: "/Eric_Huang_Software-can.pdf",
+    imageBackgroundClassName:
+      "bg-gradient-to-br from-amber-500/80 to-orange-600/80",
+    emoji: "\uD83E\uDDE0",
   },
 ];
