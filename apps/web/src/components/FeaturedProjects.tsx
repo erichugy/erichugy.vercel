@@ -180,12 +180,15 @@ export default function FeaturedProjects(): React.JSX.Element | null {
                 >
                   {activeProject.primaryCtaLabel}
                 </Link>
-                <Link
-                  href={activeProject.secondaryCtaHref}
-                  className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-[10px] transition-all font-medium text-sm hover:bg-card hover:shadow-sm"
-                >
-                  {activeProject.secondaryCtaLabel}
-                </Link>
+                {activeProject.secondaryCtaLabel &&
+                  activeProject.secondaryCtaHref && (
+                    <Link
+                      href={activeProject.secondaryCtaHref}
+                      className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-[10px] transition-all font-medium text-sm hover:bg-card hover:shadow-sm"
+                    >
+                      {activeProject.secondaryCtaLabel}
+                    </Link>
+                  )}
               </div>
             </div>
           </div>
