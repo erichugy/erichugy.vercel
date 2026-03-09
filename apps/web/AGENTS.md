@@ -33,8 +33,13 @@ Each service, tool, or domain module follows this pattern:
 
 ### Type Conventions
 
-- All shared types use Zod: `export const fooSchema = z.object({...}); export type Foo = z.infer<typeof fooSchema>;`
-- Types with `ReactNode` or non-serializable values use plain TS interfaces with a comment explaining why
+- **Zod schemas are for runtime validation only.** If a schema is used with `.parse()` or `.safeParse()` at runtime, use Zod:
+  ```typescript
+  export const fooSchema = z.object({...});
+  export type Foo = z.infer<typeof fooSchema>;
+  ```
+- **If a type is only used for type-checking (never validated at runtime), use a plain TS interface.** Don't import Zod just to derive a type — that adds bundle size for zero benefit, and the linter flags the schema as "only used as a type."
+- Types with `ReactNode` or non-serializable values use plain TS interfaces
 - Component-local types (props, internal state) stay in the component file
 - Route-specific validation schemas stay in the route file
 

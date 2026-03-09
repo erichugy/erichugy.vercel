@@ -1,16 +1,13 @@
-import { z } from "zod";
-
-const projectSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  image: z.string(),
-  primaryCtaLabel: z.string(),
-  primaryCtaHref: z.string(),
-  secondaryCtaLabel: z.string(),
-  secondaryCtaHref: z.string(),
-  imageBackgroundClassName: z.string(),
-});
-export type Project = z.infer<typeof projectSchema>;
+export interface Project {
+  title: string;
+  description: string;
+  image: string;
+  primaryCtaLabel: string;
+  primaryCtaHref: string;
+  secondaryCtaLabel: string;
+  secondaryCtaHref: string;
+  imageBackgroundClassName: string;
+}
 
 export const PROJECTS: readonly Project[] = [
   {

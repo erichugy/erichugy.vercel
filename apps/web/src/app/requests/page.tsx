@@ -149,9 +149,8 @@ export default function RequestBinPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data fetch on mount
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
   const handleClear = async () => {
     try {

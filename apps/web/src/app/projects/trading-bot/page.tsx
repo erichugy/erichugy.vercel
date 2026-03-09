@@ -22,7 +22,7 @@ const analysisResultSchema = z.object({
   articles: z.array(articleSchema),
 });
 
-type Article = z.infer<typeof articleSchema>;
+type _Article = z.infer<typeof articleSchema>;
 type AnalysisResult = z.infer<typeof analysisResultSchema>;
 
 const GATEWAY_URL =
@@ -141,7 +141,7 @@ export default function TradingBotPage() {
             </p>
             <p className="text-base md:text-lg text-body leading-relaxed max-w-2xl">
               Enter any stock ticker and this tool fetches the latest news
-              articles via the Alpaca Markets API, runs them through Cohere's
+              articles via the Alpaca Markets API, runs them through Cohere&apos;s
               NLP model to evaluate sentiment, then generates a BUY, SELL, or
               HOLD recommendation with a confidence score.
             </p>

@@ -3,7 +3,6 @@ import type {
   Certification,
   EducationEntry,
   Language,
-  VolunteerEntry,
   WorkExperience,
 } from "@/types/about";
 
