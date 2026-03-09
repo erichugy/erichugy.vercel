@@ -3,7 +3,15 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "CONTACT_WEBHOOK_URL",
+        "GOOGLE_SERVICE_ACCOUNT_EMAIL",
+        "GOOGLE_PRIVATE_KEY",
+        "GOOGLE_SHEETS_ID",
+        "GOOGLE_SHEETS_TAB_NAME",
+        "JOB_TRACKER_API_KEY"
+      ]
     },
     "dev": {
       "cache": false,
