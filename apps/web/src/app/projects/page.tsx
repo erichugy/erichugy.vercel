@@ -3,6 +3,7 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import { PROJECTS, type Project } from "@/data/projects";
+import { isExternalHref } from "@/utils/url";
 
 export const metadata = {
   title: "Projects | Eric Huang",
@@ -16,10 +17,6 @@ function TechPill({ label }: { label: string }) {
       {label}
     </span>
   );
-}
-
-function isExternal(href: string): boolean {
-  return href.startsWith("http");
 }
 
 function ProjectCard({ project }: { project: Project }) {
@@ -54,7 +51,7 @@ function ProjectCard({ project }: { project: Project }) {
           <Link
             href={project.primaryCtaHref}
             className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-accent-text px-5 py-2 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm"
-            {...(isExternal(project.primaryCtaHref) && {
+            {...(isExternalHref(project.primaryCtaHref) && {
               target: "_blank",
               rel: "noopener noreferrer",
             })}
@@ -65,7 +62,7 @@ function ProjectCard({ project }: { project: Project }) {
             <Link
               href={project.secondaryCtaHref}
               className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-[10px] transition-all font-medium text-sm hover:bg-card hover:shadow-sm"
-              {...(isExternal(project.secondaryCtaHref) && {
+              {...(isExternalHref(project.secondaryCtaHref) && {
                 target: "_blank",
                 rel: "noopener noreferrer",
               })}
@@ -144,7 +141,7 @@ export default function ProjectsPage() {
                       <Link
                         href={featuredProject.primaryCtaHref}
                         className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-accent-text px-6 py-2.5 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm"
-                        {...(isExternal(featuredProject.primaryCtaHref) && {
+                        {...(isExternalHref(featuredProject.primaryCtaHref) && {
                           target: "_blank",
                           rel: "noopener noreferrer",
                         })}
@@ -156,7 +153,7 @@ export default function ProjectsPage() {
                           <Link
                             href={featuredProject.secondaryCtaHref}
                             className="inline-flex items-center justify-center border border-border bg-page text-heading px-6 py-2.5 rounded-[10px] transition-all font-medium text-sm hover:bg-card hover:shadow-sm"
-                            {...(isExternal(featuredProject.secondaryCtaHref) && {
+                            {...(isExternalHref(featuredProject.secondaryCtaHref) && {
                               target: "_blank",
                               rel: "noopener noreferrer",
                             })}

@@ -41,6 +41,7 @@ export default function ResumePreview() {
           src="/Eric_Huang_Software-can.pdf"
           className="w-full h-full"
           title="Eric Huang Resume"
+          loading="lazy"
         />
       </div>
 
