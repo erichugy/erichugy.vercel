@@ -1,16 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
+
+function subscribeToDarkMode(callback: () => void) {
+  const observer = new MutationObserver(callback);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+  return () => observer.disconnect();
+}
+
+function getIsDarkSnapshot(): boolean {
+  return document.documentElement.classList.contains("dark");
+}
+
+function getIsDarkServerSnapshot(): boolean {
+  return false;
+}
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof document === "undefined") return false;
-    return document.documentElement.classList.contains("dark");
-  });
+  const isDark = useSyncExternalStore(
+    subscribeToDarkMode,
+    getIsDarkSnapshot,
+    getIsDarkServerSnapshot,
+  );
 
   const toggleTheme = () => {
     const newIsDark = !isDark;
-    setIsDark(newIsDark);
     document.documentElement.classList.toggle("dark", newIsDark);
     localStorage.setItem("theme", newIsDark ? "dark" : "light");
   };
