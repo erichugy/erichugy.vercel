@@ -8,3 +8,6 @@ export const SHOW_FEATURED_PROJECTS = false;
 
 /** Toggle to show/hide the activities & interests section on the about page */
 export const SHOW_ACTIVITIES = false;
+
+/** Toggle the food collector easter egg game */
+export const SHOW_FOOD_COLLECTOR = false;

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { FoodCollectorProvider } from "@/components/FoodCollector";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,7 +34,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+          <FoodCollectorProvider>{children}</FoodCollectorProvider>
+        </body>
     </html>
   );
 }

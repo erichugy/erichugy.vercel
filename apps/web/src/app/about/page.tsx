@@ -1,5 +1,6 @@
 import Activities from "@/components/Activities";
 import EducationTimeline from "@/components/EducationTimeline";
+import { FoodItem } from "@/components/FoodCollector";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import SkillsBubbleCanvas from "@/components/SkillsBubbleCanvas";
@@ -7,6 +8,9 @@ import TechSkills from "@/components/TechSkills";
 import WorkExperience from "@/components/WorkExperience";
 import { SHOW_ACTIVITIES, SHOW_DATES } from "@/config/feature-flags";
 import { CERTIFICATIONS, LANGUAGES } from "@/data/about";
+import { FOOD_ITEMS } from "@/data/food-items";
+
+const aboutFoodItems = FOOD_ITEMS.filter((item) => item.page === "/about");
 
 export const metadata = {
   title: "About Me | Eric Huang",
@@ -18,7 +22,7 @@ export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="relative">
         {/* Hero / Intro — extra top padding to clear sticky navbar */}
         <section className="px-6 pt-32 pb-20 md:pt-40 md:pb-28 bg-page">
           <div className="max-w-3xl mx-auto">
@@ -116,6 +120,9 @@ export default function AboutPage() {
 
         {/* Activities & Interests */}
         {SHOW_ACTIVITIES && <Activities />}
+        {aboutFoodItems.map((item) => (
+          <FoodItem key={item.id} id={item.id} emoji={item.emoji} className={item.className} />
+        ))}
       </main>
       <Footer />
     </>
