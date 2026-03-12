@@ -410,17 +410,20 @@ const styles = `
     align-items: center;
     gap: 16px;
   }
-  .rb-toolbar-actions { display: flex; gap: 16px; }
+  .rb-toolbar-actions { display: flex; gap: 8px; }
   .rb-toolbar-actions button {
-    color: #0969da;
-    background: none;
-    border: none;
+    color: #24292f;
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 500;
     font-family: inherit;
-    padding: 0;
+    padding: 5px 12px;
+    transition: background 0.15s;
   }
-  .rb-toolbar-actions button:hover { text-decoration: underline; }
+  .rb-toolbar-actions button:hover { background: #eaeef2; }
   .rb-container {
     display: flex;
     flex: 1;
