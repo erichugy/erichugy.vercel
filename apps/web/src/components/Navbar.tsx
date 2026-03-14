@@ -7,6 +7,7 @@ import { useState } from "react";
 import { NAV_LINKS } from "@/data/navigation";
 
 import MobileNavigation from "./MobileNavigation";
+import NavLink from "./NavLink";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
@@ -47,12 +48,12 @@ export default function Navbar() {
           <ul className="hidden md:flex items-center gap-6 justify-self-center lg:gap-8">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
-                <Link
+                <NavLink
                   href={link.href}
                   className="relative text-base font-medium font-mono text-body transition-colors hover:text-accent lg:text-lg after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-full after:h-[2px] after:bg-accent after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100"
                 >
                   {link.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>

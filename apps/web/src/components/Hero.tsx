@@ -1,11 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
+
+import NavLink from "./NavLink";
 
 export default function Hero() {
   return (
     <section className="px-6 py-20 md:py-28 lg:py-36 bg-page">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col items-center md:grid md:grid-cols-2 gap-6 lg:gap-8 md:items-center">
+        <div className="flex flex-col items-center md:grid md:grid-cols-2 gap-3 lg:gap-4 md:items-center">
           {/* Left Content */}
           <div className="space-y-5">
             <p className="font-mono text-sm text-muted tracking-wide">
@@ -37,12 +38,12 @@ export default function Hero() {
               >
                 Download Resume
               </a>
-              <Link
+              <NavLink
                 href="/#contact"
                 className="border border-accent text-accent hover:bg-accent/10 px-6 py-2.5 rounded-[10px] transition-all font-semibold text-sm"
               >
                 Get in Touch
-              </Link>
+              </NavLink>
             </div>
           </div>
 

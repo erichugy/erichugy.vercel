@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 
 import { NAV_LINKS, SOCIAL_LINKS } from "@/data/navigation";
 
+import NavLink from "./NavLink";
+
 const SOCIAL_ICONS: Record<string, ReactNode> = {
   in: (
     <svg
@@ -55,12 +57,12 @@ export default function Footer() {
             <ul className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
               {NAV_LINKS.map((link) => (
                 <li key={link.href}>
-                  <Link
+                  <NavLink
                     href={link.href}
                     className="font-mono text-muted hover:text-heading transition-colors text-sm"
                   >
                     {link.label}
-                  </Link>
+                  </NavLink>
                 </li>
               ))}
             </ul>

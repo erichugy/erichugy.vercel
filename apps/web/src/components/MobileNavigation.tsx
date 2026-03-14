@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 import { NAV_LINKS } from "@/data/navigation";
+
+import NavLink from "./NavLink";
 
 type MobileNavigationProps = {
   isOpen: boolean;
@@ -90,7 +91,7 @@ export default function MobileNavigation({
               const isActive = pathname === link.href;
               return (
                 <li key={link.href}>
-                  <Link
+                  <NavLink
                     href={link.href}
                     onClick={onClose}
                     className={`text-lg font-medium font-mono transition-colors ${
@@ -100,7 +101,7 @@ export default function MobileNavigation({
                     }`}
                   >
                     {link.label}
-                  </Link>
+                  </NavLink>
                 </li>
               );
             })}
