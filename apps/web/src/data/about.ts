@@ -27,9 +27,10 @@ export const WORK_EXPERIENCES: WorkExperience[] = [
     highlights: [
       "Accelerated a $200K+ enterprise pipeline by engineering open-source integrations for Odoo and Slack, leveraging Claude Code to automate test generation and PR drafts.",
       "Reduced MTTR to <10 minutes (24/7) by architecting a real-time monitoring service using TypeScript and Bun; integrated Sentry and AWS Lambda to automate instant stakeholder alerting.",
-      "Optimized the Botpress Studio export engine to support bots with 5GB+ RAG knowledge bases by parallelizing asset retrieval via Promise.all(), eliminating system timeouts and introducing granular UI controls for selective data export.",
+      "Optimized the Botpress Studio export engine to support bots with 5GB+ RAG knowledge bases by parallelizing asset retrieval, eliminating system timeouts and introducing granular UI controls for selective data export.",
       "Enhanced enterprise bot accuracy by developing an automated evaluation framework utilizing LLM-as-a-judge to benchmark performance against custom Gold Datasets.",
       "Improved Developer Experience (DX) for ~400 weekly active users by hardening the Botpress ADK CLI and optimizing agent-skill definitions for Claude Code agentic workflows.",
+      "Deployed and managed production AI bots for enterprise clients, ensuring system stability under high-concurrency loads of 300+ conversations per minute (~10/sec) through optimized hook execution and asynchronous API orchestration.",
     ],
   },
   {
@@ -98,14 +99,14 @@ export const EDUCATION_ENTRIES: EducationEntry[] = [
         organization: "Hack4Impact McGill — Welcome Collective",
         duration: "Sep 2024 - May 2025",
         description:
-          "Engineered a logistics routing engine using A* to optimize donation pick-up/delivery schedules; enabled managers to coordinate routes for 100+ daily clients to minimize total travel distance and fuel consumption. Designed a PostgreSQL schema to manage real-time inventory and client data, replacing manual workflows with a Dockerized Node.js backend that improved item allocation accuracy by 40%.",
+          "Optimized delivery schedules for 100+ daily clients by engineering a logistics routing engine using A* to minimize total travel distance and fuel consumption. Improved item allocation accuracy by 40% by architecting a PostgreSQL inventory schema and Dockerized Node.js backend to replace manual workflows.",
       },
       {
         role: "Independent Project",
         organization: "Turing Poker Bot",
-        duration: "2024",
+        duration: "Feb 2025",
         description:
-          "Developed a real-time decision engine using expectation calculations and opponent modeling, resulting in cash prizes in two competitive rounds of high-stakes play. Integrated a moving average RL concept to adapt strategies based on evolving opponent behaviors, maintaining positive expected value (EV) in dynamic environments.",
+          "Secured cash prizes in competitive play by developing a real-time decision engine utilizing expectation calculations and opponent modeling. Maintained positive Expected Value (EV) in dynamic environments by integrating a moving average RL strategy to adapt to evolving opponent behaviors.",
       },
     ],
     volunteer: [
@@ -185,7 +186,7 @@ export const LANGUAGES: Language[] = [
 
 export const TECHNICAL_SKILLS = {
   languages: ["TypeScript", "JavaScript", "Python", "Bash", "HTML/CSS"],
-  backend: ["Node.js", "Bun", "Zod", "Express", "FastAPI", "Flask"],
+  backend: ["Node.js", "Bun", "npm", "Zod", "Express", "FastAPI", "Flask"],
   frontend: ["React", "Next.js", "Tailwind CSS"],
   dataML: ["Pandas", "Matplotlib", "Scikit-Learn", "PyTorch"],
   devOps: [

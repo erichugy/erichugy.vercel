@@ -21,7 +21,7 @@ export default function Intro() {
           Bilingual in English and French. I enjoy building tools that make
           developers more productive and systems that scale.
         </p>
-        <p className="text-sm text-body mb-6">
+        <p className="text-sm text-body">
           {LANGUAGES.map((lang, index) => (
             <span key={lang.name}>
               {index > 0 && " \u00b7 "}
@@ -29,13 +29,6 @@ export default function Intro() {
             </span>
           ))}
         </p>
-        <a
-          href="/Eric_Huang_Software-can.pdf"
-          download
-          className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-text px-6 py-2.5 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm"
-        >
-          📄 Download Resume
-        </a>
       </div>
     </section>
   );
