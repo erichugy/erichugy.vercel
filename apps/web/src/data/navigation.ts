@@ -6,7 +6,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Home", href: "/" },
   { label: "Experience", href: "/experience" },
   { label: "Projects & Tools", href: "/projects" },
-  { label: "Contact", href: "/#contact" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export const SOCIAL_LINKS: SocialLink[] = [

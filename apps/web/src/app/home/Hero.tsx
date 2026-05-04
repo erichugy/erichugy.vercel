@@ -39,7 +39,7 @@ export default function Hero() {
                 Download Resume
               </a>
               <NavLink
-                href="/#contact"
+                href="/contact"
                 className="border border-accent text-accent hover:bg-accent/10 px-6 py-2.5 rounded-[10px] transition-all font-semibold text-sm"
               >
                 Get in Touch

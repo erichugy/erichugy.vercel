@@ -12,7 +12,7 @@ const NAME_FIELD_ID = "contact-name";
 const EMAIL_FIELD_ID = "contact-email";
 const MESSAGE_FIELD_ID = "contact-message";
 
-export default function ContactCTA() {
+export default function ContactForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -53,7 +53,7 @@ export default function ContactCTA() {
   return (
     <section
       id="contact"
-      className="px-6 py-20 md:py-28 bg-page-alt relative overflow-hidden"
+      className="px-6 pt-32 pb-20 md:pt-40 md:pb-28 bg-page-alt relative overflow-hidden"
     >
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[28rem] h-[28rem] rounded-full bg-accent/[0.06] blur-[100px]" />
 
@@ -61,9 +61,9 @@ export default function ContactCTA() {
         <p className="font-mono text-sm text-muted tracking-wide mb-3">
           {"// get in touch"}
         </p>
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-heading mb-4">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-heading mb-4">
           Let&apos;s Work Together
-        </h2>
+        </h1>
         <p className="text-base md:text-lg text-muted mb-8 max-w-xl mx-auto leading-relaxed">
           Have a project in mind? I&apos;d love to hear from you.
         </p>
