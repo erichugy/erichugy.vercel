@@ -5,8 +5,10 @@ export type { NavLink, SocialLink } from "@/types/navigation";
 export const NAV_LINKS: NavLink[] = [
   { label: "Home", href: "/" },
   { label: "Experience", href: "/experience" },
-  { label: "Projects & Tools", href: "/projects" },
-  { label: "Contact", href: "/contact" },
+  { label: "Projects", href: "/projects" },
+  { label: "Tools", href: "/tools" },
+  { label: "Hobbies", href: "/hobbies" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export const SOCIAL_LINKS: SocialLink[] = [

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import WorkInProgress from "@/components/WorkInProgress";
 import { SHOW_FEATURED_PROJECTS } from "@/config/feature-flags";
 import { PROJECTS } from "@/data/projects";
+import { isExternalHref } from "@/utils/url";
 
 const AUTOPLAY_DELAY_MS = 4500;
 
@@ -129,15 +130,24 @@ export default function FeaturedProjects(): React.JSX.Element | null {
                   }`}
                 >
                   <div
-                    className={`relative w-full h-full ${project.imageBackgroundClassName}`}
+                    className={`relative flex h-full w-full items-center justify-center text-7xl ${project.imageBackgroundClassName}`}
                   >
-                    <Image
-                      src={project.image}
-                      alt={project.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 80vw, 320px"
-                    />
+                    {project.image ? (
+                      <Image
+                        src={project.image}
+                        alt={project.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 80vw, 320px"
+                      />
+                    ) : project.emoji ? (
+                      <span
+                        className="select-none opacity-80 drop-shadow-lg"
+                        aria-hidden="true"
+                      >
+                        {project.emoji}
+                      </span>
+                    ) : null}
                   </div>
                 </button>
               );
@@ -176,15 +186,24 @@ export default function FeaturedProjects(): React.JSX.Element | null {
                 <Link
                   href={activeProject.primaryCtaHref}
                   className="inline-flex items-center justify-center bg-accent hover:bg-accent-hover text-accent-text px-5 py-2 rounded-[10px] transition-all hover:shadow-md font-semibold text-sm"
+                  {...(isExternalHref(activeProject.primaryCtaHref)
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
                 >
                   {activeProject.primaryCtaLabel}
                 </Link>
-                <Link
-                  href={activeProject.secondaryCtaHref}
-                  className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-[10px] transition-all font-medium text-sm hover:bg-card hover:shadow-sm"
-                >
-                  {activeProject.secondaryCtaLabel}
-                </Link>
+                {activeProject.secondaryCtaLabel &&
+                activeProject.secondaryCtaHref ? (
+                  <Link
+                    href={activeProject.secondaryCtaHref}
+                    className="inline-flex items-center justify-center border border-border bg-page text-heading px-5 py-2 rounded-[10px] transition-all font-medium text-sm hover:bg-card hover:shadow-sm"
+                    {...(isExternalHref(activeProject.secondaryCtaHref)
+                      ? { target: "_blank", rel: "noopener noreferrer" }
+                      : {})}
+                  >
+                    {activeProject.secondaryCtaLabel}
+                  </Link>
+                ) : null}
               </div>
             </div>
           </div>

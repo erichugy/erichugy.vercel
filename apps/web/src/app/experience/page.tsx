@@ -6,6 +6,7 @@ import Activities from "./components/Activities";
 import Certifications from "./components/Certifications";
 import EducationTimeline from "./components/EducationTimeline";
 import Intro from "./components/Intro";
+import ResumePreview from "./components/ResumePreview";
 import Skills from "./components/Skills";
 import WorkExperience from "./components/WorkExperience";
 
@@ -25,6 +26,7 @@ export default function ExperiencePage() {
         <EducationTimeline />
         <Skills />
         <Certifications />
+        <ResumePreview />
         {SHOW_ACTIVITIES && <Activities />}
       </main>
       <Footer />
