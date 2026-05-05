@@ -15,18 +15,19 @@
     "Liberation Mono", monospace;
 }
 
-/* Dark mode overrides */
+/* Dark mode: every text color hits WCAG AA against --color-page. Don't darken
+   --color-body or --color-muted without re-checking contrast. */
 .dark {
-  --color-page: #0A0A0A;
-  --color-page-alt: #111111;
-  --color-card: #141414;
-  --color-border: #262626;
+  --color-page: #0B1014;
+  --color-page-alt: #141B21;
+  --color-card: #1B2530;
+  --color-border: #3B4953;
   --color-accent: #22D3EE;
   --color-accent-hover: #06B6D4;
   --color-accent-text: #0A0A0A;
   --color-heading: #FAFAFA;
-  --color-body: #A1A1AA;
-  --color-muted: #71717A;
+  --color-body: #D6DEE3;
+  --color-muted: #9CABB4;
 }
 
 body {
