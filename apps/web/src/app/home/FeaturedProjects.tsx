@@ -130,15 +130,24 @@ export default function FeaturedProjects(): React.JSX.Element | null {
                   }`}
                 >
                   <div
-                    className={`relative w-full h-full ${project.imageBackgroundClassName}`}
+                    className={`relative flex h-full w-full items-center justify-center text-7xl ${project.imageBackgroundClassName}`}
                   >
-                    <Image
-                      src={project.image}
-                      alt={project.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 80vw, 320px"
-                    />
+                    {project.image ? (
+                      <Image
+                        src={project.image}
+                        alt={project.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 80vw, 320px"
+                      />
+                    ) : project.emoji ? (
+                      <span
+                        className="select-none opacity-80 drop-shadow-lg"
+                        aria-hidden="true"
+                      >
+                        {project.emoji}
+                      </span>
+                    ) : null}
                   </div>
                 </button>
               );

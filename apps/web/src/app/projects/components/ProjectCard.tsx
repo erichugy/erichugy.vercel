@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import TechPill from "@/components/TechPill";
@@ -12,11 +13,21 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div className="card-glow flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_2px_8px_rgba(12,27,33,0.06)]">
       <div
-        className={`flex h-40 items-center justify-center text-5xl ${project.imageBackgroundClassName}`}
-        aria-hidden="true"
+        className={`relative flex h-48 w-full items-center justify-center overflow-hidden ${project.imageBackgroundClassName}`}
       >
-        {project.emoji ? (
-          <span className="select-none opacity-80 drop-shadow-md">
+        {project.image ? (
+          <Image
+            src={project.image}
+            alt={project.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+        ) : project.emoji ? (
+          <span
+            className="select-none text-5xl opacity-80 drop-shadow-md"
+            aria-hidden="true"
+          >
             {project.emoji}
           </span>
         ) : null}
