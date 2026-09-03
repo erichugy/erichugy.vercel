@@ -396,8 +396,8 @@ export default function SqlErdClient() {
         </Link>
         <h1 className="font-mono text-[13px] font-semibold text-heading">SQL ERD Visualizer</h1>
         <p className="hidden truncate font-mono text-[11px] text-muted md:block">
-          Paste or upload SQL · drag between columns to add a relationship · everything is saved in
-          this browser
+          PostgreSQL DDL in, diagram out · drag between columns to add a relationship · everything
+          is saved in this browser
         </p>
         {storageBlocked ? (
           <span className="ml-auto shrink-0 font-mono text-[11px] text-muted">
@@ -481,6 +481,7 @@ export default function SqlErdClient() {
               <ErdSqlEditor
                 file={activeFile}
                 issues={issuesForActiveFile}
+                tables={schema.tables}
                 tableCount={(tablesByFileId[activeFileId ?? ""] ?? []).length}
                 onCollapse={toggleEditorCollapsed}
                 onChange={(sql) => {
@@ -529,8 +530,9 @@ export default function SqlErdClient() {
                   Nothing to draw yet
                 </p>
                 <p className="mb-4 text-[12px] leading-relaxed text-body">
-                  Add a SQL file in the explorer and type or paste <code>CREATE TABLE</code>{" "}
-                  statements. Tables, columns, indexes and foreign keys appear as you type.
+                  Add a SQL file in the explorer and type or paste PostgreSQL{" "}
+                  <code>CREATE TABLE</code> statements. Tables, columns, indexes and foreign keys
+                  appear as you type.
                 </p>
                 <button
                   type="button"

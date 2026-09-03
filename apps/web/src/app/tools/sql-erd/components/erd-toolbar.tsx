@@ -81,11 +81,22 @@ export default function ErdToolbar({
       >
         Import JSON
       </button>
-      <button type="button" className={BUTTON_CLASS} onClick={onExportJson}>
-        Export JSON
+      <button
+        type="button"
+        className={BUTTON_CLASS}
+        onClick={onExportJson}
+        title="Download the diagram — files, layout and hand-drawn relationships"
+      >
+        Download JSON
       </button>
-      <button type="button" className={BUTTON_CLASS} onClick={onExportSql} disabled={!tableCount}>
-        Export SQL
+      <button
+        type="button"
+        className={BUTTON_CLASS}
+        onClick={onExportSql}
+        disabled={!tableCount}
+        title="Download every enabled file as one .sql script"
+      >
+        Download SQL
       </button>
 
       <span className="ml-auto flex items-center gap-2">
