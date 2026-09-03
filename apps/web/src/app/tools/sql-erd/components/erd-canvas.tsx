@@ -37,7 +37,7 @@ export interface ErdCanvasProps {
   focusRequest: { tableId: string; nonce: number } | null;
   fitViewSignal: number;
   onSelectionChange: (selection: ErdSelection) => void;
-  onPositionChange: (tableId: string, position: NodePosition) => void;
+  onPositionsChange: (positions: Record<string, NodePosition>) => void;
   onToggleCollapsed: (tableId: string) => void;
   onCreateRelation: (patch: RelationPatch) => void;
   onReconnectRelation: (relationId: string, patch: RelationPatch) => void;
@@ -55,7 +55,7 @@ export default function ErdCanvas({
   focusRequest,
   fitViewSignal,
   onSelectionChange,
-  onPositionChange,
+  onPositionsChange,
   onToggleCollapsed,
   onCreateRelation,
   onReconnectRelation,
@@ -64,6 +64,8 @@ export default function ErdCanvas({
   const { fitView, setCenter } = useReactFlow();
   // Positions of nodes mid-drag; committed to the document on drag stop.
   const [dragPositions, setDragPositions] = useState<Record<string, NodePosition>>({});
+  // React Flow owns selection while the pointer is on the canvas (click or marquee).
+  const [selectedNodeIds, setSelectedNodeIds] = useState<ReadonlySet<string>>(new Set());
 
   const collapsedSet = useMemo(() => new Set(collapsedTableIds), [collapsedTableIds]);
 
@@ -83,8 +85,18 @@ export default function ErdCanvas({
         accentByFileId,
         nameByFileId,
         selection,
+        selectedNodeIds,
       }),
-    [tables, relations, livePositions, collapsedSet, accentByFileId, nameByFileId, selection],
+    [
+      tables,
+      relations,
+      livePositions,
+      collapsedSet,
+      accentByFileId,
+      nameByFileId,
+      selection,
+      selectedNodeIds,
+    ],
   );
 
   const edges = useMemo(
@@ -117,20 +129,42 @@ export default function ErdCanvas({
   }, [focusRequest, positions, setCenter]);
 
   const handleNodesChange = useCallback((changes: NodeChange<TableNode>[]) => {
-    const moved = changes.filter(
-      (change): change is Extract<NodeChange<TableNode>, { type: "position" }> =>
-        change.type === "position" && Boolean(change.position),
-    );
+    const moved: Record<string, NodePosition> = {};
+    let hasMoved = false;
+    let hasSelection = false;
 
-    if (!moved.length) {
+    for (const change of changes) {
+      if (change.type === "position" && change.position) {
+        moved[change.id] = change.position;
+        hasMoved = true;
+      }
+
+      if (change.type === "select") {
+        hasSelection = true;
+      }
+    }
+
+    if (hasMoved) {
+      setDragPositions((current) => ({ ...current, ...moved }));
+    }
+
+    if (!hasSelection) {
       return;
     }
 
-    setDragPositions((current) => {
-      const next = { ...current };
+    setSelectedNodeIds((current) => {
+      const next = new Set(current);
 
-      for (const change of moved) {
-        next[change.id] = change.position!;
+      for (const change of changes) {
+        if (change.type !== "select") {
+          continue;
+        }
+
+        if (change.selected) {
+          next.add(change.id);
+        } else {
+          next.delete(change.id);
+        }
       }
 
       return next;
@@ -190,13 +224,24 @@ export default function ErdCanvas({
       edgeTypes={edgeTypes}
       onNodesChange={handleNodesChange}
       onEdgesChange={handleEdgesChange}
-      onNodeDragStop={(_event, node) => {
+      onNodeDragStop={(_event, _node, draggedNodes) => {
+        // A drag started on a selected node moves the whole selection with it.
+        const committed: Record<string, NodePosition> = {};
+
+        for (const dragged of draggedNodes) {
+          committed[dragged.id] = dragged.position;
+        }
+
         setDragPositions((current) => {
           const next = { ...current };
-          delete next[node.id];
+
+          for (const id of Object.keys(committed)) {
+            delete next[id];
+          }
+
           return next;
         });
-        onPositionChange(node.id, node.position);
+        onPositionsChange(committed);
       }}
       onNodeClick={(_event, node) => onSelectionChange({ kind: "table", id: node.id })}
       onNodeDoubleClick={(_event, node) => onToggleCollapsed(node.id)}

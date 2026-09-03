@@ -62,7 +62,6 @@ export default function SqlErdClient() {
     replaceDocument,
     clearAll,
     setPositions,
-    setPosition,
     mergePositions,
     toggleCollapsed,
     addManualRelation,
@@ -457,7 +456,7 @@ export default function SqlErdClient() {
                 focusRequest={focusRequest}
                 fitViewSignal={fitViewSignal}
                 onSelectionChange={setSelection}
-                onPositionChange={setPosition}
+                onPositionsChange={mergePositions}
                 onToggleCollapsed={toggleCollapsed}
                 onCreateRelation={handleCreateRelation}
                 onReconnectRelation={handleUpdateRelationById}

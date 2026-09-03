@@ -35,6 +35,8 @@ export interface BuildNodesOptions {
   accentByFileId: Record<string, string>;
   nameByFileId: Record<string, string>;
   selection: ErdSelection;
+  /** Nodes React Flow itself has selected — a click, or a marquee covering several. */
+  selectedNodeIds: ReadonlySet<string>;
 }
 
 /** Tables directly involved in the current selection, used to focus the canvas. */
@@ -96,7 +98,9 @@ export function buildNodes(options: BuildNodesOptions): TableNode[] {
       id: table.id,
       type: "erdTable" as const,
       position: positions[table.id] ?? { x: 0, y: 0 },
-      selected: options.selection.kind === "table" && options.selection.id === table.id,
+      selected:
+        options.selectedNodeIds.has(table.id) ||
+        (options.selection.kind === "table" && options.selection.id === table.id),
       deletable: false,
       // Declared rather than measured so the minimap and auto-layout agree with the DOM.
       width: NODE_WIDTH,

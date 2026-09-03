@@ -34,7 +34,6 @@ export interface UseErdDocumentResult {
   replaceDocument: (next: ErdDocument) => void;
   clearAll: () => void;
   setPositions: (positions: Record<string, NodePosition>) => void;
-  setPosition: (tableId: string, position: NodePosition) => void;
   mergePositions: (positions: Record<string, NodePosition>) => void;
   toggleCollapsed: (tableId: string) => void;
   addManualRelation: (patch: Required<Pick<RelationPatch, "sourceTable" | "targetTable">> & RelationPatch) => string;
@@ -160,16 +159,6 @@ export function useErdDocument(): UseErdDocumentResult {
   const mergePositions = useCallback(
     (positions: Record<string, NodePosition>) => {
       patchDocument((current) => ({ ...current, positions: { ...current.positions, ...positions } }));
-    },
-    [patchDocument],
-  );
-
-  const setPosition = useCallback(
-    (tableId: string, position: NodePosition) => {
-      patchDocument((current) => ({
-        ...current,
-        positions: { ...current.positions, [tableId]: position },
-      }));
     },
     [patchDocument],
   );
@@ -334,7 +323,6 @@ export function useErdDocument(): UseErdDocumentResult {
     replaceDocument,
     clearAll,
     setPositions,
-    setPosition,
     mergePositions,
     toggleCollapsed,
     addManualRelation,
