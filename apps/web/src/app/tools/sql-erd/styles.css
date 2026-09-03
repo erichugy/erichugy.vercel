@@ -1,0 +1,84 @@
+/* React Flow ships a light-only default theme; these overrides bind it to the
+   site's design tokens so the canvas follows dark mode with the rest of the page. */
+
+.erd-flow {
+  --xy-background-color: var(--color-page);
+  --xy-edge-stroke-default: var(--color-muted);
+  --xy-edge-stroke-selected-default: var(--color-accent);
+  --xy-connectionline-stroke-default: var(--color-accent);
+  --xy-attribution-background-color-default: transparent;
+  background-color: var(--color-page);
+}
+
+.erd-flow .react-flow__background-pattern {
+  color: var(--color-border);
+}
+
+.erd-flow .react-flow__handle {
+  width: 7px;
+  height: 7px;
+  min-width: 7px;
+  min-height: 7px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.erd-flow .react-flow__node:hover .react-flow__handle,
+.erd-flow .react-flow__handle.connecting,
+.erd-flow .react-flow__handle.valid {
+  opacity: 1;
+}
+
+.erd-flow .react-flow__handle.valid {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.erd-flow .react-flow__node {
+  cursor: grab;
+}
+
+.erd-flow .react-flow__node.dragging {
+  cursor: grabbing;
+}
+
+.erd-flow .erd-edge-dimmed {
+  opacity: 0.2;
+}
+
+.erd-flow .react-flow__controls {
+  box-shadow: 0 2px 8px rgba(12, 27, 33, 0.12);
+}
+
+.erd-flow .react-flow__controls-button {
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-card);
+  fill: var(--color-body);
+}
+
+.erd-flow .react-flow__controls-button:hover {
+  background: var(--color-page-alt);
+}
+
+.erd-flow .erd-minimap {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-page-alt);
+}
+
+.erd-flow .react-flow__minimap-mask {
+  fill: var(--color-page);
+  fill-opacity: 0.6;
+}
+
+.erd-flow .react-flow__attribution {
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 9px;
+}
+
+.erd-flow .react-flow__attribution a {
+  color: var(--color-muted);
+}
