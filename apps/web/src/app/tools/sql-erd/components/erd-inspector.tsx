@@ -115,7 +115,7 @@ export default function ErdInspector({
   }
 
   return (
-    <aside className="flex h-full w-[280px] shrink-0 flex-col border-l border-border bg-page-alt">
+    <aside className="pointer-events-auto flex max-h-full w-[280px] flex-col overflow-hidden rounded-lg border border-border bg-page-alt shadow-[0_8px_24px_rgba(12,27,33,0.16)]">
       <div className="flex items-center justify-between border-b border-border px-3 py-2">
         <span className="font-mono text-[11px] uppercase tracking-wide text-muted">
           {table ? "Table" : "Relationship"}

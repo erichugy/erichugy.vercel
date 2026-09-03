@@ -7,13 +7,16 @@ export const MAX_FILE_BYTES = 1_000_000;
 /** Re-parsing every keystroke is wasteful on large schemas; this feels instant anyway. */
 export const PARSE_DEBOUNCE_MS = 250;
 
-export const MIN_SIDEBAR_WIDTH = 200;
-export const MAX_SIDEBAR_WIDTH = 460;
-export const DEFAULT_SIDEBAR_WIDTH = 280;
+export const MIN_FILE_TREE_WIDTH = 180;
+export const MAX_FILE_TREE_WIDTH = 400;
+export const DEFAULT_FILE_TREE_WIDTH = 240;
 
-export const MIN_EDITOR_HEIGHT = 120;
-export const MAX_EDITOR_HEIGHT = 560;
-export const DEFAULT_EDITOR_HEIGHT = 240;
+export const MIN_EDITOR_WIDTH = 260;
+export const MAX_EDITOR_WIDTH = 900;
+export const DEFAULT_EDITOR_WIDTH = 420;
+
+/** Width of a pane collapsed down to its vertical label rail. */
+export const RAIL_WIDTH = 34;
 
 /** Header accents, assigned to files in order so each file's tables read as a group. */
 export const FILE_ACCENTS: readonly string[] = [

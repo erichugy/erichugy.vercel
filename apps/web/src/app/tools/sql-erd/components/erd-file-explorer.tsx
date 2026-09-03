@@ -21,6 +21,7 @@ export interface ErdFileExplorerProps {
   onRenameFile: (fileId: string, name: string) => void;
   onSelectTable: (tableId: string) => void;
   onLoadSample: () => void;
+  onCollapse: () => void;
 }
 
 export default function ErdFileExplorer({
@@ -37,6 +38,7 @@ export default function ErdFileExplorer({
   onRenameFile,
   onSelectTable,
   onLoadSample,
+  onCollapse,
 }: ErdFileExplorerProps) {
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [renamingFileId, setRenamingFileId] = useState<string | null>(null);
@@ -85,6 +87,15 @@ export default function ErdFileExplorer({
             title="Upload .sql files"
           >
             Upload
+          </button>
+          <button
+            type="button"
+            onClick={onCollapse}
+            className="rounded px-1 text-[12px] leading-none text-muted transition-colors hover:bg-card hover:text-heading"
+            title="Hide the file explorer"
+            aria-label="Hide the file explorer"
+          >
+            «
           </button>
         </div>
       </div>

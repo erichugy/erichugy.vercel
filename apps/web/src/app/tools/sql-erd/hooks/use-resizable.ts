@@ -9,12 +9,10 @@ interface UseResizableOptions {
   min: number;
   max: number;
   initial: number;
-  /** Invert when the panel grows in the opposite direction to the pointer. */
-  invert?: boolean;
   onCommit?: (value: number) => void;
 }
 
-export function useResizable({ axis, min, max, initial, invert, onCommit }: UseResizableOptions) {
+export function useResizable({ axis, min, max, initial, onCommit }: UseResizableOptions) {
   const [size, setSize] = useState(initial);
   const [isResizing, setIsResizing] = useState(false);
   const dragStart = useRef({ pointer: 0, size: initial });
@@ -40,7 +38,7 @@ export function useResizable({ axis, min, max, initial, invert, onCommit }: UseR
 
     const handleMove = (event: PointerEvent) => {
       const pointer = axis === "horizontal" ? event.clientX : event.clientY;
-      const delta = (pointer - dragStart.current.pointer) * (invert ? -1 : 1);
+      const delta = pointer - dragStart.current.pointer;
       const next = Math.min(Math.max(dragStart.current.size + delta, min), max);
 
       latestSize.current = next;
@@ -59,7 +57,7 @@ export function useResizable({ axis, min, max, initial, invert, onCommit }: UseR
       window.removeEventListener("pointermove", handleMove);
       window.removeEventListener("pointerup", handleUp);
     };
-  }, [axis, invert, isResizing, max, min, onCommit]);
+  }, [axis, isResizing, max, min, onCommit]);
 
   return { size, setSize, isResizing, startResize };
 }

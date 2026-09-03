@@ -1,17 +1,19 @@
 import { createEmptyDocument, erdDocumentSchema, type ErdDocument } from "@/tools/sql-erd";
 
 import {
-  DEFAULT_EDITOR_HEIGHT,
-  DEFAULT_SIDEBAR_WIDTH,
+  DEFAULT_EDITOR_WIDTH,
+  DEFAULT_FILE_TREE_WIDTH,
   ERD_DOCUMENT_STORAGE_KEY,
-  MAX_EDITOR_HEIGHT,
-  MAX_SIDEBAR_WIDTH,
-  MIN_EDITOR_HEIGHT,
-  MIN_SIDEBAR_WIDTH,
+  MAX_EDITOR_WIDTH,
+  MAX_FILE_TREE_WIDTH,
+  MIN_EDITOR_WIDTH,
+  MIN_FILE_TREE_WIDTH,
 } from "../sql-erd.constants";
 
-const SIDEBAR_WIDTH_STORAGE_KEY = "sql-erd:sidebar-width";
-const EDITOR_HEIGHT_STORAGE_KEY = "sql-erd:editor-height";
+const FILE_TREE_WIDTH_STORAGE_KEY = "sql-erd:file-tree-width";
+const EDITOR_WIDTH_STORAGE_KEY = "sql-erd:editor-width";
+const FILE_TREE_COLLAPSED_STORAGE_KEY = "sql-erd:file-tree-collapsed";
+const EDITOR_COLLAPSED_STORAGE_KEY = "sql-erd:editor-collapsed";
 
 export function loadDocument(): ErdDocument {
   try {
@@ -63,28 +65,55 @@ function saveNumber(key: string, value: number): void {
   }
 }
 
-export function loadSidebarWidth(): number {
+function loadFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveFlag(key: string, value: boolean): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // Non-critical layout preference.
+  }
+}
+
+export function loadFileTreeWidth(): number {
   return loadNumber(
-    SIDEBAR_WIDTH_STORAGE_KEY,
-    DEFAULT_SIDEBAR_WIDTH,
-    MIN_SIDEBAR_WIDTH,
-    MAX_SIDEBAR_WIDTH,
+    FILE_TREE_WIDTH_STORAGE_KEY,
+    DEFAULT_FILE_TREE_WIDTH,
+    MIN_FILE_TREE_WIDTH,
+    MAX_FILE_TREE_WIDTH,
   );
 }
 
-export function saveSidebarWidth(width: number): void {
-  saveNumber(SIDEBAR_WIDTH_STORAGE_KEY, width);
+export function saveFileTreeWidth(width: number): void {
+  saveNumber(FILE_TREE_WIDTH_STORAGE_KEY, width);
 }
 
-export function loadEditorHeight(): number {
-  return loadNumber(
-    EDITOR_HEIGHT_STORAGE_KEY,
-    DEFAULT_EDITOR_HEIGHT,
-    MIN_EDITOR_HEIGHT,
-    MAX_EDITOR_HEIGHT,
-  );
+export function loadEditorWidth(): number {
+  return loadNumber(EDITOR_WIDTH_STORAGE_KEY, DEFAULT_EDITOR_WIDTH, MIN_EDITOR_WIDTH, MAX_EDITOR_WIDTH);
 }
 
-export function saveEditorHeight(height: number): void {
-  saveNumber(EDITOR_HEIGHT_STORAGE_KEY, height);
+export function saveEditorWidth(width: number): void {
+  saveNumber(EDITOR_WIDTH_STORAGE_KEY, width);
+}
+
+export function loadFileTreeCollapsed(): boolean {
+  return loadFlag(FILE_TREE_COLLAPSED_STORAGE_KEY);
+}
+
+export function saveFileTreeCollapsed(collapsed: boolean): void {
+  saveFlag(FILE_TREE_COLLAPSED_STORAGE_KEY, collapsed);
+}
+
+export function loadEditorCollapsed(): boolean {
+  return loadFlag(EDITOR_COLLAPSED_STORAGE_KEY);
+}
+
+export function saveEditorCollapsed(collapsed: boolean): void {
+  saveFlag(EDITOR_COLLAPSED_STORAGE_KEY, collapsed);
 }

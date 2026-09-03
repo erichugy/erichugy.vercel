@@ -5,7 +5,7 @@ import "./styles.css";
 
 import { ReactFlowProvider } from "@xyflow/react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   computeLayout,
@@ -27,23 +27,30 @@ import ErdFileExplorer from "./components/erd-file-explorer";
 import ErdInspector from "./components/erd-inspector";
 import ErdSqlEditor from "./components/erd-sql-editor";
 import ErdToolbar from "./components/erd-toolbar";
+import PaneRail from "./components/pane-rail";
 import { useErdDocument } from "./hooks/use-erd-document";
 import { useResizable } from "./hooks/use-resizable";
 import { downloadTextFile, readFileAsText } from "./lib/download";
 import {
-  loadEditorHeight,
-  loadSidebarWidth,
-  saveEditorHeight,
-  saveSidebarWidth,
+  loadEditorCollapsed,
+  loadEditorWidth,
+  loadFileTreeCollapsed,
+  loadFileTreeWidth,
+  saveEditorCollapsed,
+  saveEditorWidth,
+  saveFileTreeCollapsed,
+  saveFileTreeWidth,
 } from "./lib/erd-persistence";
 import {
   accentForIndex,
-  MAX_EDITOR_HEIGHT,
+  DEFAULT_EDITOR_WIDTH,
+  DEFAULT_FILE_TREE_WIDTH,
+  MAX_EDITOR_WIDTH,
   MAX_FILE_BYTES,
   MAX_FILES,
-  MAX_SIDEBAR_WIDTH,
-  MIN_EDITOR_HEIGHT,
-  MIN_SIDEBAR_WIDTH,
+  MAX_FILE_TREE_WIDTH,
+  MIN_EDITOR_WIDTH,
+  MIN_FILE_TREE_WIDTH,
   PARSE_DEBOUNCE_MS,
   SQL_FILE_EXTENSIONS,
 } from "./sql-erd.constants";
@@ -74,33 +81,56 @@ export default function SqlErdClient() {
   const [selection, setSelection] = useState<ErdSelection>({ kind: "none" });
   const [focusRequest, setFocusRequest] = useState<{ tableId: string; nonce: number } | null>(null);
   const [fitViewSignal, setFitViewSignal] = useState(0);
+  const [fileTreeCollapsed, setFileTreeCollapsed] = useState(false);
   const [editorCollapsed, setEditorCollapsed] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [debouncedFiles, setDebouncedFiles] = useState<SqlFile[]>([]);
 
-  const sidebar = useResizable({
+  const fileTree = useResizable({
     axis: "horizontal",
-    min: MIN_SIDEBAR_WIDTH,
-    max: MAX_SIDEBAR_WIDTH,
-    initial: 280,
-    onCommit: saveSidebarWidth,
+    min: MIN_FILE_TREE_WIDTH,
+    max: MAX_FILE_TREE_WIDTH,
+    initial: DEFAULT_FILE_TREE_WIDTH,
+    onCommit: saveFileTreeWidth,
   });
   const editor = useResizable({
-    axis: "vertical",
-    min: MIN_EDITOR_HEIGHT,
-    max: MAX_EDITOR_HEIGHT,
-    initial: 240,
-    invert: true,
-    onCommit: saveEditorHeight,
+    axis: "horizontal",
+    min: MIN_EDITOR_WIDTH,
+    max: MAX_EDITOR_WIDTH,
+    initial: DEFAULT_EDITOR_WIDTH,
+    onCommit: saveEditorWidth,
   });
 
-  const setSidebarSize = sidebar.setSize;
+  const setFileTreeSize = fileTree.setSize;
   const setEditorSize = editor.setSize;
 
   useEffect(() => {
-    setSidebarSize(loadSidebarWidth());
-    setEditorSize(loadEditorHeight());
-  }, [setSidebarSize, setEditorSize]);
+    const storedFileTreeWidth = loadFileTreeWidth();
+    const storedEditorWidth = loadEditorWidth();
+    const storedFileTreeCollapsed = loadFileTreeCollapsed();
+    const storedEditorCollapsed = loadEditorCollapsed();
+
+    startTransition(() => {
+      setFileTreeSize(storedFileTreeWidth);
+      setEditorSize(storedEditorWidth);
+      setFileTreeCollapsed(storedFileTreeCollapsed);
+      setEditorCollapsed(storedEditorCollapsed);
+    });
+  }, [setFileTreeSize, setEditorSize]);
+
+  const toggleFileTreeCollapsed = useCallback(() => {
+    setFileTreeCollapsed((current) => {
+      saveFileTreeCollapsed(!current);
+      return !current;
+    });
+  }, []);
+
+  const toggleEditorCollapsed = useCallback(() => {
+    setEditorCollapsed((current) => {
+      saveEditorCollapsed(!current);
+      return !current;
+    });
+  }, []);
 
   // Parsing on every keystroke is wasted work on a large schema.
   useEffect(() => {
@@ -355,16 +385,6 @@ export default function SqlErdClient() {
     [activeFileId, schema.issues],
   );
 
-  const previousFileCount = useRef(0);
-
-  useEffect(() => {
-    if (erdDocument.files.length > previousFileCount.current) {
-      setEditorCollapsed(false);
-    }
-
-    previousFileCount.current = erdDocument.files.length;
-  }, [erdDocument.files.length]);
-
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-page text-body">
       <header className="flex items-center gap-3 border-b border-border bg-page px-4 py-2">
@@ -411,111 +431,135 @@ export default function SqlErdClient() {
       ) : null}
 
       <div className="flex min-h-0 flex-1">
-        <div style={{ width: sidebar.size }} className="shrink-0">
-          <ErdFileExplorer
-            files={erdDocument.files}
-            accentByFileId={accentByFileId}
-            tablesByFileId={tablesByFileId}
-            activeFileId={activeFileId}
-            selection={selection}
-            onSelectFile={setActiveFileId}
-            onAddFile={() => {
-              const [id] = addFiles([
-                { name: `untitled-${erdDocument.files.length + 1}.sql`, sql: "" },
-              ]);
-              setActiveFileId(id ?? null);
-            }}
-            onUploadFiles={handleUploadFiles}
-            onToggleFile={toggleFile}
-            onRemoveFile={removeFile}
-            onRenameFile={renameFile}
-            onSelectTable={handleSelectTable}
-            onLoadSample={handleLoadSample}
+        {fileTreeCollapsed ? (
+          <PaneRail
+            label="Files"
+            badge={erdDocument.files.length ? String(erdDocument.files.length) : undefined}
+            onExpand={toggleFileTreeCollapsed}
           />
-        </div>
-
-        <div
-          className="w-1 shrink-0 cursor-col-resize bg-border/60 transition-colors hover:bg-accent/40"
-          onPointerDown={sidebar.startResize}
-          role="separator"
-          aria-orientation="vertical"
-          aria-label="Resize file explorer"
-        />
-
-        <div className="flex min-w-0 flex-1 flex-col">
-          <div className="relative min-h-0 flex-1">
-            <ReactFlowProvider>
-              <ErdCanvas
-                tables={schema.tables}
-                relations={relations}
-                positions={erdDocument.positions}
-                collapsedTableIds={erdDocument.collapsedTableIds}
+        ) : (
+          <>
+            <div style={{ width: fileTree.size }} className="shrink-0">
+              <ErdFileExplorer
+                files={erdDocument.files}
                 accentByFileId={accentByFileId}
-                nameByFileId={nameByFileId}
+                tablesByFileId={tablesByFileId}
+                activeFileId={activeFileId}
                 selection={selection}
-                focusRequest={focusRequest}
-                fitViewSignal={fitViewSignal}
-                onSelectionChange={setSelection}
-                onPositionsChange={mergePositions}
-                onToggleCollapsed={toggleCollapsed}
-                onCreateRelation={handleCreateRelation}
-                onReconnectRelation={handleUpdateRelationById}
-                onDeleteRelation={handleDeleteRelationById}
+                onSelectFile={setActiveFileId}
+                onAddFile={() => {
+                  const [id] = addFiles([
+                    { name: `untitled-${erdDocument.files.length + 1}.sql`, sql: "" },
+                  ]);
+                  setActiveFileId(id ?? null);
+                }}
+                onUploadFiles={handleUploadFiles}
+                onToggleFile={toggleFile}
+                onRemoveFile={removeFile}
+                onRenameFile={renameFile}
+                onSelectTable={handleSelectTable}
+                onLoadSample={handleLoadSample}
+                onCollapse={toggleFileTreeCollapsed}
               />
-            </ReactFlowProvider>
+            </div>
 
-            {schema.tables.length === 0 ? (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div className="pointer-events-auto max-w-sm rounded-xl border border-border bg-card p-6 text-center shadow-sm">
-                  <p className="mb-1 font-mono text-[13px] font-semibold text-heading">
-                    Nothing to draw yet
-                  </p>
-                  <p className="mb-4 text-[12px] leading-relaxed text-body">
-                    Add a SQL file on the left and type or paste <code>CREATE TABLE</code>{" "}
-                    statements. Tables, columns, indexes and foreign keys appear as you type.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleLoadSample}
-                    className="rounded-md bg-accent px-3 py-1.5 font-mono text-[12px] font-semibold text-accent-text transition-colors hover:bg-accent-hover"
-                  >
-                    Load sample schema
-                  </button>
-                </div>
+            <div
+              className="w-1 shrink-0 cursor-col-resize bg-border/60 transition-colors hover:bg-accent/40"
+              onPointerDown={fileTree.startResize}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize the file explorer"
+            />
+          </>
+        )}
+
+        {editorCollapsed ? (
+          <PaneRail label="SQL" onExpand={toggleEditorCollapsed} />
+        ) : (
+          <>
+            <div style={{ width: editor.size }} className="min-w-0 shrink-0">
+              <ErdSqlEditor
+                file={activeFile}
+                issues={issuesForActiveFile}
+                tableCount={(tablesByFileId[activeFileId ?? ""] ?? []).length}
+                onCollapse={toggleEditorCollapsed}
+                onChange={(sql) => {
+                  if (activeFileId) {
+                    updateFileSql(activeFileId, sql);
+                  }
+                }}
+              />
+            </div>
+
+            <div
+              className="w-1 shrink-0 cursor-col-resize bg-border/60 transition-colors hover:bg-accent/40"
+              onPointerDown={editor.startResize}
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="Resize the SQL editor"
+            />
+          </>
+        )}
+
+        <div className="relative min-w-0 flex-1">
+          <ReactFlowProvider>
+            <ErdCanvas
+              tables={schema.tables}
+              relations={relations}
+              positions={erdDocument.positions}
+              collapsedTableIds={erdDocument.collapsedTableIds}
+              accentByFileId={accentByFileId}
+              nameByFileId={nameByFileId}
+              selection={selection}
+              focusRequest={focusRequest}
+              fitViewSignal={fitViewSignal}
+              onSelectionChange={setSelection}
+              onPositionsChange={mergePositions}
+              onToggleCollapsed={toggleCollapsed}
+              onCreateRelation={handleCreateRelation}
+              onReconnectRelation={handleUpdateRelationById}
+              onDeleteRelation={handleDeleteRelationById}
+            />
+          </ReactFlowProvider>
+
+          {schema.tables.length === 0 ? (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="pointer-events-auto max-w-sm rounded-xl border border-border bg-card p-6 text-center shadow-sm">
+                <p className="mb-1 font-mono text-[13px] font-semibold text-heading">
+                  Nothing to draw yet
+                </p>
+                <p className="mb-4 text-[12px] leading-relaxed text-body">
+                  Add a SQL file in the explorer and type or paste <code>CREATE TABLE</code>{" "}
+                  statements. Tables, columns, indexes and foreign keys appear as you type.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleLoadSample}
+                  className="rounded-md bg-accent px-3 py-1.5 font-mono text-[12px] font-semibold text-accent-text transition-colors hover:bg-accent-hover"
+                >
+                  Load sample schema
+                </button>
               </div>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
 
-          <div style={{ height: editorCollapsed ? undefined : editor.size }} className="shrink-0">
-            <ErdSqlEditor
-              file={activeFile}
-              issues={issuesForActiveFile}
-              tableCount={(tablesByFileId[activeFileId ?? ""] ?? []).length}
-              collapsed={editorCollapsed}
-              onToggleCollapsed={() => setEditorCollapsed((current) => !current)}
-              onChange={(sql) => {
-                if (activeFileId) {
-                  updateFileSql(activeFileId, sql);
-                }
+          {/* Floated rather than docked so the diagram keeps the full width of its pane. */}
+          <div className="pointer-events-none absolute right-3 top-3 flex max-h-[calc(100%-190px)] justify-end">
+            <ErdInspector
+              selection={selection}
+              tables={schema.tables}
+              relations={relations}
+              onSelect={setSelection}
+              onUpdateRelation={updateRelation}
+              onDeleteRelation={(relation) => {
+                deleteRelation(relation);
+                setSelection({ kind: "none" });
               }}
-              onStartResize={editor.startResize}
+              onToggleCollapsed={toggleCollapsed}
+              onClose={() => setSelection({ kind: "none" })}
             />
           </div>
         </div>
-
-        <ErdInspector
-          selection={selection}
-          tables={schema.tables}
-          relations={relations}
-          onSelect={setSelection}
-          onUpdateRelation={updateRelation}
-          onDeleteRelation={(relation) => {
-            deleteRelation(relation);
-            setSelection({ kind: "none" });
-          }}
-          onToggleCollapsed={toggleCollapsed}
-          onClose={() => setSelection({ kind: "none" })}
-        />
       </div>
     </div>
   );
