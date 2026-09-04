@@ -13,7 +13,7 @@ import {
   parseSqlFiles,
   placeMissingTables,
   resolveRelations,
-  SAMPLE_SQL_FILES,
+  SAMPLE_SCHEMAS,
   serializeDocument,
   serializeSql,
   type DiagramRelation,
@@ -27,6 +27,7 @@ import ErdFileExplorer from "./components/erd-file-explorer";
 import ErdInspector from "./components/erd-inspector";
 import ErdSqlEditor from "./components/erd-sql-editor";
 import ErdToolbar from "./components/erd-toolbar";
+import ExamplePicker from "./components/example-picker";
 import PaneRail from "./components/pane-rail";
 import { useErdDocument } from "./hooks/use-erd-document";
 import { useResizable } from "./hooks/use-resizable";
@@ -312,15 +313,24 @@ export default function SqlErdClient() {
     [replaceDocument],
   );
 
-  const handleLoadSample = useCallback(() => {
-    const ids = addFiles(SAMPLE_SQL_FILES.map((file) => ({ name: file.name, sql: file.sql })));
+  const handleLoadExample = useCallback(
+    (exampleId: string) => {
+      const example = SAMPLE_SCHEMAS.find((entry) => entry.id === exampleId);
 
-    if (ids.length) {
-      setActiveFileId(ids[0]);
-    }
+      if (!example) {
+        return;
+      }
 
-    setStatusMessage("Loaded the sample schema.");
-  }, [addFiles]);
+      const ids = addFiles(example.files.map((file) => ({ name: file.name, sql: file.sql })));
+
+      if (ids.length) {
+        setActiveFileId(ids[0]);
+      }
+
+      setStatusMessage(`Loaded the ${example.name} example.`);
+    },
+    [addFiles],
+  );
 
   const handleClear = useCallback(() => {
     clearAll();
@@ -420,7 +430,7 @@ export default function SqlErdClient() {
         onAutoLayout={handleAutoLayout}
         onFitView={() => setFitViewSignal((current) => current + 1)}
         onRestoreHidden={restoreHiddenRelations}
-        onLoadSample={handleLoadSample}
+        onLoadExample={handleLoadExample}
         onClear={handleClear}
       />
 
@@ -458,7 +468,6 @@ export default function SqlErdClient() {
                 onRemoveFile={removeFile}
                 onRenameFile={renameFile}
                 onSelectTable={handleSelectTable}
-                onLoadSample={handleLoadSample}
                 onCollapse={toggleFileTreeCollapsed}
               />
             </div>
@@ -525,22 +534,16 @@ export default function SqlErdClient() {
 
           {schema.tables.length === 0 ? (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="pointer-events-auto max-w-sm rounded-xl border border-border bg-card p-6 text-center shadow-sm">
+              <div className="pointer-events-auto w-[26rem] max-w-full rounded-xl border border-border bg-card p-6 shadow-sm">
                 <p className="mb-1 font-mono text-[13px] font-semibold text-heading">
                   Nothing to draw yet
                 </p>
                 <p className="mb-4 text-[12px] leading-relaxed text-body">
                   Add a SQL file in the explorer and type or paste PostgreSQL{" "}
                   <code>CREATE TABLE</code> statements. Tables, columns, indexes and foreign keys
-                  appear as you type.
+                  appear as you type — or start from an example.
                 </p>
-                <button
-                  type="button"
-                  onClick={handleLoadSample}
-                  className="rounded-md bg-accent px-3 py-1.5 font-mono text-[12px] font-semibold text-accent-text transition-colors hover:bg-accent-hover"
-                >
-                  Load sample schema
-                </button>
+                <ExamplePicker onLoadExample={handleLoadExample} />
               </div>
             </div>
           ) : null}

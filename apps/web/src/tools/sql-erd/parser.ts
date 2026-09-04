@@ -567,6 +567,8 @@ interface ParseContext {
   tables: Map<string, ParsedTable>;
   foreignKeys: PendingForeignKey[];
   issues: ParseIssue[];
+  /** Names declared by CREATE TYPE ... AS ENUM, so columns using them read as "enum". */
+  enumTypes: Set<string>;
 }
 
 function parseCreateTable(cursor: TokenCursor, fileId: string, context: ParseContext): void {
@@ -902,6 +904,15 @@ function parseStatement(tokens: Token[], fileId: string, context: ParseContext):
     if (cursor.matchWords("TABLE")) {
       cursor.matchWords("IF", "NOT", "EXISTS");
       parseCreateTable(cursor, fileId, context);
+      return;
+    }
+
+    if (cursor.matchWords("TYPE")) {
+      const typeName = readQualifiedName(cursor);
+
+      if (typeName && cursor.matchWords("AS") && cursor.matchWords("ENUM")) {
+        context.enumTypes.add(typeName.name.toLowerCase());
+      }
     }
 
     return;
@@ -964,7 +975,12 @@ export interface SqlSource {
  * foreign key but never defined are kept as stubs so the diagram stays connected.
  */
 export function parseSqlFiles(sources: SqlSource[]): ParsedSchema {
-  const context: ParseContext = { tables: new Map(), foreignKeys: [], issues: [] };
+  const context: ParseContext = {
+    tables: new Map(),
+    foreignKeys: [],
+    issues: [],
+    enumTypes: new Set(),
+  };
 
   for (const source of sources) {
     try {
@@ -976,6 +992,19 @@ export function parseSqlFiles(sources: SqlSource[]): ParsedSchema {
         fileId: source.id,
         message: error instanceof Error ? error.message : "Failed to parse file.",
       });
+    }
+  }
+
+  // Enum types may be declared in a later file than the tables using them.
+  if (context.enumTypes.size) {
+    for (const table of context.tables.values()) {
+      for (const column of table.columns) {
+        const baseType = column.type.split("(")[0].split(".").pop()?.trim() ?? "";
+
+        if (context.enumTypes.has(baseType)) {
+          column.displayType = "enum";
+        }
+      }
     }
   }
 

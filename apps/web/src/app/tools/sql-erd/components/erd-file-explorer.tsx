@@ -20,7 +20,6 @@ export interface ErdFileExplorerProps {
   onRemoveFile: (fileId: string) => void;
   onRenameFile: (fileId: string, name: string) => void;
   onSelectTable: (tableId: string) => void;
-  onLoadSample: () => void;
   onCollapse: () => void;
 }
 
@@ -37,7 +36,6 @@ export default function ErdFileExplorer({
   onRemoveFile,
   onRenameFile,
   onSelectTable,
-  onLoadSample,
   onCollapse,
 }: ErdFileExplorerProps) {
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -116,16 +114,9 @@ export default function ErdFileExplorer({
         {files.length === 0 ? (
           <div className="px-3 py-6 text-center">
             <p className="text-[12px] leading-relaxed text-muted">
-              Drop <code className="font-mono">.sql</code> files here, upload them, or start from a
-              sample schema.
+              Drop <code className="font-mono">.sql</code> files here, upload them, or pick an
+              example from the canvas.
             </p>
-            <button
-              type="button"
-              onClick={onLoadSample}
-              className="mt-3 rounded-md bg-accent px-3 py-1.5 text-[12px] font-semibold text-accent-text transition-colors hover:bg-accent-hover"
-            >
-              Load sample schema
-            </button>
           </div>
         ) : null}
 

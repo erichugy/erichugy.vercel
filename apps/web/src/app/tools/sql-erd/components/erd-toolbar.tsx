@@ -2,6 +2,8 @@
 
 import { useRef } from "react";
 
+import { SAMPLE_SCHEMAS } from "@/tools/sql-erd";
+
 const BUTTON_CLASS =
   "rounded-md border border-border bg-card px-2.5 py-1 font-mono text-[11px] text-body transition-colors hover:border-accent hover:text-heading disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -15,7 +17,7 @@ export interface ErdToolbarProps {
   onAutoLayout: () => void;
   onFitView: () => void;
   onRestoreHidden: () => void;
-  onLoadSample: () => void;
+  onLoadExample: (exampleId: string) => void;
   onClear: () => void;
 }
 
@@ -29,7 +31,7 @@ export default function ErdToolbar({
   onAutoLayout,
   onFitView,
   onRestoreHidden,
-  onLoadSample,
+  onLoadExample,
   onClear,
 }: ErdToolbarProps) {
   const importInputRef = useRef<HTMLInputElement>(null);
@@ -100,9 +102,24 @@ export default function ErdToolbar({
       </button>
 
       <span className="ml-auto flex items-center gap-2">
-        <button type="button" className={BUTTON_CLASS} onClick={onLoadSample}>
-          Sample
-        </button>
+        <select
+          className={`${BUTTON_CLASS} cursor-pointer`}
+          value=""
+          onChange={(event) => {
+            if (event.target.value) {
+              onLoadExample(event.target.value);
+              event.target.value = "";
+            }
+          }}
+          aria-label="Load an example schema"
+        >
+          <option value="">Load example…</option>
+          {SAMPLE_SCHEMAS.map((example) => (
+            <option key={example.id} value={example.id}>
+              {example.name}
+            </option>
+          ))}
+        </select>
         <button type="button" className={BUTTON_CLASS} onClick={onClear}>
           Clear
         </button>

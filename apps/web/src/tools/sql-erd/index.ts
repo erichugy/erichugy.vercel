@@ -22,7 +22,8 @@ export { parseSqlFiles } from "./parser";
 export { CARDINALITY_LABELS, createManualRelationId, resolveRelations } from "./relations";
 export type { DiagramRelation } from "./relations";
 
-export { SAMPLE_SQL_FILES } from "./sample";
+export { SAMPLE_SCHEMAS } from "./sample";
+export type { SampleSchema } from "./sample";
 
 export { erdDocumentSchema } from "./types";
 export type {
