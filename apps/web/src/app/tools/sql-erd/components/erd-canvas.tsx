@@ -6,6 +6,7 @@ import {
   ConnectionMode,
   Controls,
   MiniMap,
+  PanOnScrollMode,
   ReactFlow,
   useReactFlow,
   type Connection,
@@ -316,6 +317,13 @@ export default function ErdCanvas({
       connectionMode={ConnectionMode.Loose}
       connectionRadius={32}
       deleteKeyCode={DELETE_KEYS}
+      // Scrolling moves the camera on both axes; depth is reserved for
+      // Cmd/Ctrl + scroll and trackpad pinch, which React Flow routes through
+      // the zoom activation key rather than the plain wheel handler.
+      panOnScroll
+      panOnScrollMode={PanOnScrollMode.Free}
+      zoomOnScroll={false}
+      zoomOnPinch
       nodesDraggable
       nodesConnectable
       minZoom={0.1}
