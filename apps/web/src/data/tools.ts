@@ -9,6 +9,15 @@ export interface Tool {
 
 export const TOOLS: readonly Tool[] = [
   {
+    title: "SQL ERD Visualizer",
+    description:
+      "Drop in your .sql migration files and watch an entity-relationship diagram build itself — tables, columns, indexes and foreign keys. Drag nodes around, re-wire relationships by hand, and export the diagram as JSON.",
+    href: "/tools/sql-erd",
+    techStack: ["Next.js", "React Flow", "TypeScript", "Zod"],
+    icon: "🗄️",
+    gradient: "from-violet-500/20 to-fuchsia-500/20",
+  },
+  {
     title: "Request Bin",
     description:
       "A lightweight request inspection tool that captures incoming HTTP requests and displays them with syntax-highlighted headers, body, and query parameters. Send requests to your unique endpoint and watch them appear in real-time.",
