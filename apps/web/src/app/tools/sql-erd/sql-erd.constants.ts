@@ -18,8 +18,11 @@ export const DEFAULT_EDITOR_WIDTH = 420;
 /** Width of a pane collapsed down to its vertical label rail. */
 export const RAIL_WIDTH = 34;
 
-/** Header accents, assigned to files in order so each file's tables read as a group. */
-export const FILE_ACCENTS: readonly string[] = [
+/**
+ * Header accents. Hues are spread far enough apart that neighbouring tables stay
+ * tellable apart, and every one of them is legible as a tint in both themes.
+ */
+export const TABLE_ACCENTS: readonly string[] = [
   "#0EA5C9",
   "#EC4899",
   "#8B5CF6",
@@ -28,10 +31,10 @@ export const FILE_ACCENTS: readonly string[] = [
   "#6366F1",
   "#EF4444",
   "#14B8A6",
+  "#3B82F6",
+  "#A855F7",
+  "#84CC16",
+  "#F97316",
 ];
-
-export function accentForIndex(index: number): string {
-  return FILE_ACCENTS[index % FILE_ACCENTS.length];
-}
 
 export const SQL_FILE_EXTENSIONS = [".sql", ".ddl", ".txt"] as const;

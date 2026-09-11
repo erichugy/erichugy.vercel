@@ -32,6 +32,7 @@ import PaneRail from "./components/pane-rail";
 import { useErdDocument } from "./hooks/use-erd-document";
 import { useResizable } from "./hooks/use-resizable";
 import { downloadTextFile, readFileAsText } from "./lib/download";
+import { buildAccentMap } from "./lib/erd-accents";
 import {
   loadEditorCollapsed,
   loadEditorWidth,
@@ -43,7 +44,6 @@ import {
   saveFileTreeWidth,
 } from "./lib/erd-persistence";
 import {
-  accentForIndex,
   DEFAULT_EDITOR_WIDTH,
   DEFAULT_FILE_TREE_WIDTH,
   MAX_EDITOR_WIDTH,
@@ -170,15 +170,10 @@ export default function SqlErdClient() {
     return map;
   }, [relations]);
 
-  const accentByFileId = useMemo(() => {
-    const accents: Record<string, string> = {};
-
-    erdDocument.files.forEach((file, index) => {
-      accents[file.id] = accentForIndex(index);
-    });
-
-    return accents;
-  }, [erdDocument.files]);
+  const accentByTableId = useMemo(
+    () => buildAccentMap(schema.tables, relations),
+    [schema.tables, relations],
+  );
 
   const nameByFileId = useMemo(() => {
     const names: Record<string, string> = {};
@@ -457,8 +452,8 @@ export default function SqlErdClient() {
             <div style={{ width: fileTree.size }} className="shrink-0">
               <ErdFileExplorer
                 files={erdDocument.files}
-                accentByFileId={accentByFileId}
                 tablesByFileId={tablesByFileId}
+                accentByTableId={accentByTableId}
                 activeFileId={activeFileId}
                 selection={selection}
                 onSelectFile={setActiveFileId}
@@ -523,8 +518,8 @@ export default function SqlErdClient() {
               relations={relations}
               positions={erdDocument.positions}
               collapsedTableIds={erdDocument.collapsedTableIds}
-              accentByFileId={accentByFileId}
               nameByFileId={nameByFileId}
+              accentByTableId={accentByTableId}
               selection={selection}
               focusRequest={focusRequest}
               fitViewSignal={fitViewSignal}

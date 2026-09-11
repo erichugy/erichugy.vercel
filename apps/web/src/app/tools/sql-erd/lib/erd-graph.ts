@@ -1,6 +1,7 @@
-import { MarkerType, type Edge } from "@xyflow/react";
+import type { Edge } from "@xyflow/react";
 
 import {
+  CARDINALITY_ENDPOINTS,
   measureNodeHeight,
   NODE_WIDTH,
   type DiagramRelation,
@@ -12,9 +13,10 @@ import { selectionTableId, type ErdSelection, type RelationEdgeData, type TableN
 
 const HANDLE_SEPARATOR = "::";
 
-// Hoisted so every rebuild reuses one object: a fresh marker each render churns
-// React Flow's marker definitions and makes the arrowheads flicker.
-const ARROW_MARKER = { type: MarkerType.ArrowClosed, width: 14, height: 14 } as const;
+/** Horizontal gap between the parallel channels edges are fanned out into. */
+const CHANNEL_GAP = 16;
+/** Edges whose natural turn lands within this many pixels share a channel group. */
+const CHANNEL_BUCKET = 48;
 
 export function makeHandleId(columnName: string, side: "left" | "right"): string {
   return `${columnName}${HANDLE_SEPARATOR}${side}`;
@@ -35,8 +37,8 @@ export interface BuildNodesOptions {
   relations: DiagramRelation[];
   positions: Record<string, NodePosition>;
   collapsedTableIds: ReadonlySet<string>;
-  accentByFileId: Record<string, string>;
   nameByFileId: Record<string, string>;
+  accentByTableId: Record<string, string>;
   selection: ErdSelection;
   /** Nodes React Flow itself has selected — a click, or a marquee covering several. */
   selectedNodeIds: ReadonlySet<string>;
@@ -74,7 +76,7 @@ function computeHighlightedTables(
 }
 
 export function buildNodes(options: BuildNodesOptions): TableNode[] {
-  const { tables, relations, positions, collapsedTableIds, accentByFileId, nameByFileId } = options;
+  const { tables, relations, positions, collapsedTableIds, nameByFileId } = options;
 
   const connectedColumns = new Map<string, Set<string>>();
 
@@ -122,7 +124,7 @@ export function buildNodes(options: BuildNodesOptions): TableNode[] {
       measured: { width: NODE_WIDTH, height },
       data: {
         table,
-        accent: accentByFileId[table.fileId] ?? "#0EA5C9",
+        accent: options.accentByTableId[table.id] ?? "#0EA5C9",
         fileName: nameByFileId[table.fileId] ?? "unknown",
         collapsed,
         connectedColumns: connectedColumns.get(table.id) ?? new Set<string>(),
@@ -140,13 +142,91 @@ export interface BuildEdgesOptions {
   relations: DiagramRelation[];
   positions: Record<string, NodePosition>;
   selection: ErdSelection;
+  tables: ParsedTable[];
 }
 
-export function buildEdges({ relations, positions, selection }: BuildEdgesOptions): Edge<RelationEdgeData>[] {
+/** `tableId::column` (lowercased) for every column the DDL declared nullable. */
+function collectNullableColumns(tables: ParsedTable[]): Set<string> {
+  const nullable = new Set<string>();
+
+  for (const table of tables) {
+    for (const column of table.columns) {
+      if (column.nullable) {
+        nullable.add(`${table.id}::${column.name.toLowerCase()}`);
+      }
+    }
+  }
+
+  return nullable;
+}
+
+interface EdgeGeometry {
+  /** X the smooth-step router would turn at if the edge were routed on its own. */
+  centerX: number;
+  targetIsRight: boolean;
+}
+
+function measureEdge(relation: DiagramRelation, positions: Record<string, NodePosition>): EdgeGeometry {
+  const sourceLeft = positions[relation.sourceTable]?.x ?? 0;
+  const targetLeft = positions[relation.targetTable]?.x ?? 0;
+  const targetIsRight = targetLeft + NODE_WIDTH / 2 >= sourceLeft + NODE_WIDTH / 2;
+
+  const sourceX = targetIsRight ? sourceLeft + NODE_WIDTH : sourceLeft;
+  const targetX = targetIsRight ? targetLeft : targetLeft + NODE_WIDTH;
+
+  return { centerX: (sourceX + targetX) / 2, targetIsRight };
+}
+
+/**
+ * Smooth-step edges turn at the midpoint between their two nodes, so every edge
+ * crossing the same gap stacks into one vertical line and the diagram reads as a
+ * single trunk. Bucketing by that turn and fanning each bucket out sideways gives
+ * every edge its own channel, which is what makes the individual links followable.
+ */
+function computeChannelOffsets(
+  relations: DiagramRelation[],
+  geometry: Map<string, EdgeGeometry>,
+): Map<string, number> {
+  const buckets = new Map<string, DiagramRelation[]>();
+
+  for (const relation of relations) {
+    const centerX = geometry.get(relation.id)?.centerX ?? 0;
+    const key = String(Math.round(centerX / CHANNEL_BUCKET));
+
+    buckets.set(key, [...(buckets.get(key) ?? []), relation]);
+  }
+
+  const offsets = new Map<string, number>();
+
+  for (const bucket of buckets.values()) {
+    // Sorted by id so the fan order is stable across re-parses rather than following
+    // whatever order the parser happened to emit relations in.
+    const ordered = [...bucket].sort((left, right) => left.id.localeCompare(right.id));
+
+    ordered.forEach((relation, index) => {
+      offsets.set(relation.id, (index - (ordered.length - 1) / 2) * CHANNEL_GAP);
+    });
+  }
+
+  return offsets;
+}
+
+export function buildEdges({
+  relations,
+  positions,
+  selection,
+  tables,
+}: BuildEdgesOptions): Edge<RelationEdgeData>[] {
+  const nullableColumns = collectNullableColumns(tables);
+  const geometry = new Map(relations.map((relation) => [relation.id, measureEdge(relation, positions)]));
+  const channelOffsets = computeChannelOffsets(relations, geometry);
+
+  const hasNullableColumn = (tableId: string, columns: string[]) =>
+    columns.some((column) => nullableColumns.has(`${tableId}::${column.toLowerCase()}`));
+
   return relations.map((relation) => {
-    const sourceCenter = (positions[relation.sourceTable]?.x ?? 0) + NODE_WIDTH / 2;
-    const targetCenter = (positions[relation.targetTable]?.x ?? 0) + NODE_WIDTH / 2;
-    const targetIsRight = targetCenter >= sourceCenter;
+    const targetIsRight = geometry.get(relation.id)?.targetIsRight ?? true;
+    const [sourceMark, targetMark] = CARDINALITY_ENDPOINTS[relation.cardinality];
 
     const sourceColumn = relation.sourceColumns[0] ?? "";
     const targetColumn = relation.targetColumns[0] ?? "";
@@ -168,8 +248,18 @@ export function buildEdges({ relations, positions, selection }: BuildEdgesOption
       targetHandle: makeHandleId(targetColumn, targetIsRight ? "left" : "right"),
       selected: isSelected,
       reconnectable: true,
-      markerEnd: ARROW_MARKER,
-      data: { relation, label },
+      data: {
+        relation,
+        label,
+        channelOffset: channelOffsets.get(relation.id) ?? 0,
+        // Only a "one" end can be optional, and it is optional when the key pointing at
+        // it from the other side is nullable — that row may have no counterpart at all,
+        // which crow's-foot notation marks with a ring.
+        sourceOptional:
+          sourceMark === "one" && hasNullableColumn(relation.targetTable, relation.targetColumns),
+        targetOptional:
+          targetMark === "one" && hasNullableColumn(relation.sourceTable, relation.sourceColumns),
+      },
       className: isDimmed ? "erd-edge-dimmed" : undefined,
     };
   });

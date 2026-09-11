@@ -33,8 +33,8 @@ export interface ErdCanvasProps {
   relations: DiagramRelation[];
   positions: Record<string, NodePosition>;
   collapsedTableIds: string[];
-  accentByFileId: Record<string, string>;
   nameByFileId: Record<string, string>;
+  accentByTableId: Record<string, string>;
   selection: ErdSelection;
   focusRequest: { tableId: string; nonce: number } | null;
   fitViewSignal: number;
@@ -51,8 +51,8 @@ export default function ErdCanvas({
   relations,
   positions,
   collapsedTableIds,
-  accentByFileId,
   nameByFileId,
+  accentByTableId,
   selection,
   focusRequest,
   fitViewSignal,
@@ -88,8 +88,8 @@ export default function ErdCanvas({
         relations,
         positions,
         collapsedTableIds: collapsedSet,
-        accentByFileId,
         nameByFileId,
+        accentByTableId,
         selection,
         selectedNodeIds,
       }),
@@ -98,8 +98,8 @@ export default function ErdCanvas({
       relations,
       positions,
       collapsedSet,
-      accentByFileId,
       nameByFileId,
+      accentByTableId,
       selection,
       selectedNodeIds,
     ],
@@ -121,8 +121,8 @@ export default function ErdCanvas({
   // derives edge geometry from the node store, so rebuilding this array mid-drag only
   // churns edge elements and flips handle sides as nodes cross, which reads as flicker.
   const edges = useMemo(
-    () => buildEdges({ relations, positions, selection }),
-    [relations, positions, selection],
+    () => buildEdges({ relations, positions, selection, tables }),
+    [relations, positions, selection, tables],
   );
 
   useEffect(() => {

@@ -22,6 +22,15 @@ function withAlpha(hexColor: string, alpha: number): string {
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
 
+/**
+ * Pulls the palette hue towards whichever heading colour the theme is using, so one
+ * palette reads on the light card and the dark one. Measured across all twelve hues:
+ * anything above ~54% drops the light theme's title under 4.5:1 on its own tint.
+ */
+function headingColorFor(hexColor: string): string {
+  return `color-mix(in srgb, ${hexColor} 52%, var(--color-heading))`;
+}
+
 interface ColumnHandlesProps {
   columnName: string;
   hidden?: boolean;
@@ -54,10 +63,13 @@ function ColumnHandles({ columnName, hidden }: ColumnHandlesProps) {
 
 function ErdTableNode({ data, selected }: NodeProps<TableNode>) {
   const { table, accent, fileName, collapsed, connectedColumns, selectedColumn, dimmed } = data;
+  // The title carries the table's colour; the tint alone is too faint to tell a dozen
+  // tables apart at the zoom levels a whole schema is read at.
+  const headingColor = headingColorFor(accent);
 
   return (
     <div
-      className={`h-full w-full rounded-lg border bg-card font-mono text-[11px] shadow-[0_2px_10px_rgba(12,27,33,0.10)] transition-opacity ${
+      className={`erd-node-card h-full w-full rounded-lg border bg-card font-mono text-[11px] transition-opacity ${
         selected ? "border-accent ring-2 ring-accent/40" : "border-border"
       } ${dimmed ? "opacity-35" : "opacity-100"}`}
     >
@@ -70,7 +82,9 @@ function ErdTableNode({ data, selected }: NodeProps<TableNode>) {
         }}
         title={`${table.name} — ${fileName}`}
       >
-        <span className="truncate text-[13px] font-semibold text-heading">{table.name}</span>
+        <span className="truncate text-[13px] font-semibold" style={{ color: headingColor }}>
+          {table.name}
+        </span>
         {table.isStub ? (
           <span className="shrink-0 rounded-sm bg-page-alt px-1 text-[9px] uppercase tracking-wide text-muted">
             inferred

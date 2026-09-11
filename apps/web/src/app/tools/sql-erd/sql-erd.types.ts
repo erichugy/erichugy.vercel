@@ -20,6 +20,11 @@ export type TableNode = Node<TableNodeData, "erdTable">;
 export interface RelationEdgeData extends Record<string, unknown> {
   relation: DiagramRelation;
   label: string;
+  /** Sideways shift of the edge's vertical channel, so parallel edges stay apart. */
+  channelOffset: number;
+  /** Draw the crow's-foot "zero" ring at that end. */
+  sourceOptional: boolean;
+  targetOptional: boolean;
 }
 
 export type ErdSelection =

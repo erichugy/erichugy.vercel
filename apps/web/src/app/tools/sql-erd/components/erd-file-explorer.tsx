@@ -9,8 +9,8 @@ import type { ErdSelection } from "../sql-erd.types";
 
 export interface ErdFileExplorerProps {
   files: SqlFile[];
-  accentByFileId: Record<string, string>;
   tablesByFileId: Record<string, ParsedTable[]>;
+  accentByTableId: Record<string, string>;
   activeFileId: string | null;
   selection: ErdSelection;
   onSelectFile: (fileId: string) => void;
@@ -25,8 +25,8 @@ export interface ErdFileExplorerProps {
 
 export default function ErdFileExplorer({
   files,
-  accentByFileId,
   tablesByFileId,
+  accentByTableId,
   activeFileId,
   selection,
   onSelectFile,
@@ -138,11 +138,6 @@ export default function ErdFileExplorer({
                   className="h-3 w-3 shrink-0 accent-[var(--color-accent)]"
                   title={file.enabled ? "Exclude from diagram" : "Include in diagram"}
                 />
-                <span
-                  className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                  style={{ backgroundColor: accentByFileId[file.id] }}
-                />
-
                 {renamingFileId === file.id ? (
                   <input
                     autoFocus
@@ -196,14 +191,22 @@ export default function ErdFileExplorer({
                       <button
                         type="button"
                         onClick={() => onSelectTable(table.id)}
-                        className={`w-full truncate rounded px-1.5 py-0.5 text-left font-mono text-[11px] transition-colors ${
+                        className={`flex w-full items-center gap-1.5 rounded px-1.5 py-0.5 text-left font-mono text-[11px] transition-colors ${
                           selection.kind === "table" && selection.id === table.id
                             ? "bg-accent/15 text-heading"
                             : "text-body hover:text-heading"
                         }`}
                       >
-                        {table.name}
-                        {table.isStub ? <span className="text-muted"> (inferred)</span> : null}
+                        {/* Same colour the table's node carries, so the list and the
+                            canvas can be matched up at a glance. */}
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-sm"
+                          style={{ backgroundColor: accentByTableId[table.id] }}
+                        />
+                        <span className="truncate">
+                          {table.name}
+                          {table.isStub ? <span className="text-muted"> (inferred)</span> : null}
+                        </span>
                       </button>
                     </li>
                   ))}

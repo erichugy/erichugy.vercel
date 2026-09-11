@@ -17,12 +17,18 @@ export const CARDINALITY_LABELS: Record<RelationCardinality, string> = {
   "many-to-many": "N:N",
 };
 
-/** The symbol shown at each end of an edge, as [source end, target end]. */
-export const CARDINALITY_ENDPOINTS: Record<RelationCardinality, readonly [string, string]> = {
-  "one-to-one": ["1", "1"],
-  "one-to-many": ["1", "N"],
-  "many-to-one": ["N", "1"],
-  "many-to-many": ["N", "N"],
+/** Crow's-foot notation: a bar for "one", a splayed foot for "many". */
+export type RelationEndMark = "one" | "many";
+
+/** The mark drawn at each end of an edge, as [source end, target end]. */
+export const CARDINALITY_ENDPOINTS: Record<
+  RelationCardinality,
+  readonly [RelationEndMark, RelationEndMark]
+> = {
+  "one-to-one": ["one", "one"],
+  "one-to-many": ["one", "many"],
+  "many-to-one": ["many", "one"],
+  "many-to-many": ["many", "many"],
 };
 
 /**

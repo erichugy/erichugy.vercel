@@ -25,7 +25,7 @@ export {
   createManualRelationId,
   resolveRelations,
 } from "./relations";
-export type { DiagramRelation } from "./relations";
+export type { DiagramRelation, RelationEndMark } from "./relations";
 
 export { SAMPLE_SCHEMAS } from "./sample";
 export type { SampleSchema } from "./sample";
