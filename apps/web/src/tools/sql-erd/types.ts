@@ -21,6 +21,8 @@ export interface ParsedColumn {
   /** Allowed values pulled out of a CHECK ... IN / = ANY constraint on the column. */
   checkValues?: readonly string[];
   comment?: string;
+  /** Marked `@new` in the SQL: added by the change being diagrammed. */
+  isNew?: boolean;
 }
 
 export interface ParsedIndex {
@@ -42,6 +44,8 @@ export interface ParsedTable {
   fileId: string;
   /** True when the table was only inferred from a foreign key to an undefined table. */
   isStub: boolean;
+  /** Marked `@new` in the SQL: added by the change being diagrammed. */
+  isNew?: boolean;
 }
 
 export type RelationCardinality = "one-to-one" | "one-to-many" | "many-to-one" | "many-to-many";

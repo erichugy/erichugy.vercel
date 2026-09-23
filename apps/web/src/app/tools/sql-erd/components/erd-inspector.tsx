@@ -161,6 +161,11 @@ function ColumnPanel({
         >
           in {table.name} ↑
         </button>
+        {column.isNew ? (
+          <p className="erd-new-note mt-1 rounded px-1.5 py-0.5 text-[11px] leading-relaxed">
+            Added by this change
+          </p>
+        ) : null}
         {column.comment ? (
           <p className="mt-1 text-[11px] leading-relaxed text-body">{column.comment}</p>
         ) : null}
@@ -326,6 +331,13 @@ export default function ErdInspector({
               {table.isStub ? (
                 <p className="mt-1 text-[11px] leading-relaxed text-muted">
                   Inferred from a foreign key — no CREATE TABLE for it was found.
+                </p>
+              ) : null}
+              {table.isNew || table.columns.some((entry) => entry.isNew) ? (
+                <p className="erd-new-note mt-1 rounded px-1.5 py-0.5 text-[11px] leading-relaxed">
+                  {table.isNew
+                    ? "Added by this change"
+                    : `${table.columns.filter((entry) => entry.isNew).length} column(s) added by this change`}
                 </p>
               ) : null}
             </div>

@@ -95,6 +95,49 @@
   cursor: grabbing;
 }
 
+/* `@new` markers. A green wash plus a left edge, so the added rows are findable at
+   a glance and still legible for anyone who cannot separate the hue. */
+.erd-new-chip {
+  background-color: rgba(16, 185, 129, 0.18);
+  color: #047857;
+}
+
+.dark .erd-new-chip {
+  background-color: rgba(52, 211, 153, 0.22);
+  color: #6EE7B7;
+}
+
+.erd-new-row {
+  background-color: rgba(16, 185, 129, 0.10);
+  box-shadow: inset 2px 0 0 #10B981;
+}
+
+.dark .erd-new-row {
+  background-color: rgba(52, 211, 153, 0.12);
+  box-shadow: inset 2px 0 0 #34D399;
+}
+
+.erd-new-note {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #046C53;
+}
+
+.dark .erd-new-note {
+  background-color: rgba(52, 211, 153, 0.14);
+  color: #6EE7B7;
+}
+
+.erd-new-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: #10B981;
+}
+
+.dark .erd-new-dot {
+  background-color: #34D399;
+}
+
 .erd-flow .erd-edge-dimmed {
   opacity: 0.2;
 }

@@ -17,13 +17,48 @@ const DIGIT = /[0-9]/;
 const IDENT_QUOTES: Record<string, string> = { '"': '"', "`": "`", "[": "]" };
 
 /**
+ * Marks a table or column as added by the change being diagrammed, e.g.
+ * `form_id uuid, -- @new`. Read off comments rather than a separate input so an
+ * annotated file is still the plain SQL it came from.
+ */
+const NEW_ANNOTATION = /@new\b/i;
+
+export interface TokenizeResult {
+  tokens: Token[];
+  /** Lines carrying a `@new` comment, and the line each such comment sits above. */
+  annotatedLines: Set<number>;
+}
+
+/**
  * Lexes SQL into tokens, dropping comments. Deliberately dialect-tolerant: it
  * accepts Postgres, MySQL, SQLite and T-SQL quoting rather than committing to one.
  */
-export function tokenize(sql: string): Token[] {
+export function tokenize(sql: string): TokenizeResult {
   const tokens: Token[] = [];
+  const annotatedLines = new Set<number>();
   let index = 0;
   let line = 1;
+
+  /** True when nothing but whitespace precedes `start` on its line. */
+  const startsItsLine = (start: number): boolean => {
+    for (let back = start - 1; back >= 0 && sql[back] !== "\n"; back -= 1) {
+      if (!/\s/.test(sql[back])) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // A trailing marker annotates the definition it sits on; one written on its own
+  // line annotates the definition below it. Both styles are common in migrations.
+  const annotate = (text: string, start: number, commentLine: number) => {
+    if (!NEW_ANNOTATION.test(text)) {
+      return;
+    }
+
+    annotatedLines.add(startsItsLine(start) ? commentLine + 1 : commentLine);
+  };
 
   const push = (kind: TokenKind, value: string) => {
     tokens.push({ kind, value, upper: value.toUpperCase(), line });
@@ -45,13 +80,17 @@ export function tokenize(sql: string): Token[] {
 
     // Line comments: -- ... and MySQL's # ...
     if ((char === "-" && sql[index + 1] === "-") || char === "#") {
+      const start = index;
       while (index < sql.length && sql[index] !== "\n") {
         index += 1;
       }
+      annotate(sql.slice(start, index), start, line);
       continue;
     }
 
     if (char === "/" && sql[index + 1] === "*") {
+      const start = index;
+      const openedOn = line;
       index += 2;
       while (index < sql.length && !(sql[index] === "*" && sql[index + 1] === "/")) {
         if (sql[index] === "\n") {
@@ -60,6 +99,7 @@ export function tokenize(sql: string): Token[] {
         index += 1;
       }
       index += 2;
+      annotate(sql.slice(start, index), start, openedOn);
       continue;
     }
 
@@ -180,7 +220,7 @@ export function tokenize(sql: string): Token[] {
     index += 1;
   }
 
-  return tokens;
+  return { tokens, annotatedLines };
 }
 
 /** Splits a token stream into statements on top-level semicolons. */

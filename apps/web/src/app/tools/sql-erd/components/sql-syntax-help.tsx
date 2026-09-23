@@ -12,12 +12,21 @@ const READS: readonly { statement: string; detail: string }[] = [
   },
   { statement: "CREATE [UNIQUE] INDEX", detail: "Listed under the table it indexes." },
   { statement: "COMMENT ON TABLE / COLUMN", detail: "Shown in the inspector and on hover." },
+  {
+    statement: "CHECK (col IN (…))",
+    detail: "Read as the column's allowed values, listed in the inspector.",
+  },
+  {
+    statement: "-- @new",
+    detail:
+      "Marks the table or column as added by the change you are diagramming; it is highlighted in green. Put it at the end of the line, or on its own line just above.",
+  },
 ];
 
 const SKIPS: readonly string[] = [
   "CREATE TYPE, VIEW, FUNCTION, TRIGGER, EXTENSION",
   "INSERT, SELECT, UPDATE, GRANT and other DML",
-  "CHECK bodies and CREATE TABLE … AS SELECT",
+  "CREATE TABLE … AS SELECT (no column list to read)",
 ];
 
 export default function SqlSyntaxHelp({ onClose }: { onClose: () => void }) {

@@ -66,6 +66,7 @@ function ErdTableNode({ data, selected }: NodeProps<TableNode>) {
   // The title carries the table's colour; the tint alone is too faint to tell a dozen
   // tables apart at the zoom levels a whole schema is read at.
   const headingColor = headingColorFor(accent);
+  const newColumnCount = table.columns.filter((column) => column.isNew).length;
 
   return (
     <div
@@ -90,6 +91,18 @@ function ErdTableNode({ data, selected }: NodeProps<TableNode>) {
             inferred
           </span>
         ) : null}
+        {table.isNew ? (
+          <span className="erd-new-chip shrink-0 rounded-sm px-1 text-[9px] font-semibold uppercase tracking-wide">
+            new
+          </span>
+        ) : newColumnCount ? (
+          <span
+            className="erd-new-chip shrink-0 rounded-sm px-1 text-[9px] font-semibold uppercase tracking-wide"
+            title={`${newColumnCount} new ${newColumnCount === 1 ? "column" : "columns"}`}
+          >
+            +{newColumnCount}
+          </span>
+        ) : null}
       </div>
 
       {collapsed ? (
@@ -105,6 +118,7 @@ function ErdTableNode({ data, selected }: NodeProps<TableNode>) {
             const isSelected = column.name === selectedColumn;
             const allowedValues = column.enumValues ?? column.checkValues;
             const rowTitle = [
+              column.isNew ? "Added by this change" : null,
               column.comment,
               column.type,
               allowedValues?.length ? `one of: ${allowedValues.join(", ")}` : null,
@@ -119,6 +133,8 @@ function ErdTableNode({ data, selected }: NodeProps<TableNode>) {
                 key={column.name}
                 data-erd-column={column.name}
                 className={`relative flex cursor-pointer items-center justify-between gap-2 px-3 ${
+                  column.isNew ? "erd-new-row " : ""
+                }${
                   isSelected ? "bg-accent/15 text-heading" : isConnected ? "text-heading" : "text-body"
                 } hover:bg-accent/10`}
                 style={{ height: NODE_ROW_HEIGHT }}
@@ -142,6 +158,9 @@ function ErdTableNode({ data, selected }: NodeProps<TableNode>) {
                   <span className={`truncate ${column.isPrimaryKey ? "font-semibold" : ""}`}>
                     {column.name}
                   </span>
+                  {column.isNew ? (
+                    <span className="erd-new-dot shrink-0" aria-label="added by this change" />
+                  ) : null}
                 </span>
 
                 <span className="shrink-0 text-muted">

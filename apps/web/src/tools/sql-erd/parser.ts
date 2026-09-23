@@ -475,7 +475,10 @@ interface ColumnDefinitionResult {
   isPrimaryKey: boolean;
 }
 
-function parseColumnDefinition(tokens: Token[]): ColumnDefinitionResult | null {
+function parseColumnDefinition(
+  tokens: Token[],
+  annotatedLines: ReadonlySet<number>,
+): ColumnDefinitionResult | null {
   const cursor = new TokenCursor(tokens);
   const nameToken = cursor.next();
 
@@ -495,6 +498,7 @@ function parseColumnDefinition(tokens: Token[]): ColumnDefinitionResult | null {
     isUnique: false,
     hasDefault: SERIAL_TYPES.has(normalizedType),
     isAutoIncrement: SERIAL_TYPES.has(normalizedType),
+    isNew: annotatedLines.has(nameToken!.line) || undefined,
   };
 
   let reference: InlineReference | undefined;
@@ -690,9 +694,12 @@ interface ParseContext {
   issues: ParseIssue[];
   /** Values declared by CREATE TYPE ... AS ENUM, keyed by lowercased type name. */
   enumTypes: Map<string, string[]>;
+  /** Lines of the file being parsed that carry a `@new` marker. */
+  annotatedLines: ReadonlySet<number>;
 }
 
 function parseCreateTable(cursor: TokenCursor, fileId: string, context: ParseContext): void {
+  const nameLine = cursor.peek()?.line;
   const qualifiedName = readQualifiedName(cursor);
 
   if (!qualifiedName) {
@@ -720,6 +727,7 @@ function parseCreateTable(cursor: TokenCursor, fileId: string, context: ParseCon
     indexes: [],
     fileId,
     isStub: false,
+    isNew: (nameLine !== undefined && context.annotatedLines.has(nameLine)) || undefined,
   };
 
   const pendingChecks: { columnNames: string[]; values: string[] }[] = [];
@@ -771,7 +779,7 @@ function parseCreateTable(cursor: TokenCursor, fileId: string, context: ParseCon
       continue;
     }
 
-    const definition = parseColumnDefinition(entry);
+    const definition = parseColumnDefinition(entry, context.annotatedLines);
 
     if (!definition) {
       continue;
@@ -929,7 +937,7 @@ function parseAlterTable(cursor: TokenCursor, fileId: string, context: ParseCont
       continue;
     }
 
-    const definition = parseColumnDefinition(rest);
+    const definition = parseColumnDefinition(rest, context.annotatedLines);
 
     if (definition && !table.columns.some((entry) => entry.name === definition.column.name)) {
       table.columns.push(definition.column);
@@ -1129,11 +1137,16 @@ export function parseSqlFiles(sources: SqlSource[]): ParsedSchema {
     foreignKeys: [],
     issues: [],
     enumTypes: new Map(),
+    annotatedLines: new Set(),
   };
 
   for (const source of sources) {
     try {
-      for (const statement of splitStatements(tokenize(source.sql))) {
+      const { tokens, annotatedLines } = tokenize(source.sql);
+
+      context.annotatedLines = annotatedLines;
+
+      for (const statement of splitStatements(tokens)) {
         parseStatement(statement, source.id, context);
       }
     } catch (error) {
